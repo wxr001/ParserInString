@@ -14,7 +14,10 @@ target_include_directories(test PRIVATE lib/doctest/doctest)
 include(GNUInstallDirs)
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
+include_directories(
+    include
+    lib/TAVL
+    lib/static_print)
 target_include_directories(
     ${PROJECT_NAME}
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
