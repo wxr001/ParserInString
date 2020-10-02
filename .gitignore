@@ -37,3 +37,10 @@ cmake-build-debug/*
 
 # Intellij IDEA
 .idea/*
+
+# test files
+test/1
+test/ll
+test/lr0
+test/test_lexer
+test/test_pl0
