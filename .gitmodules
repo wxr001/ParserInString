@@ -1,0 +1,6 @@
+[submodule "lib/TAVL"]
+	path = lib/TAVL
+	url = https://github.com/wxr001/TAVL.git
+[submodule "lib/static_print"]
+	path = lib/static_print
+	url = https://github.com/wxr001/static_print.git

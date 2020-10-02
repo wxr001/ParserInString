@@ -1,0 +1,1554 @@
+// Universal Compiler Library -*- C++ -*-
+
+// Copyright (C) 2018  Scott Brown
+
+// This file is part of the UCL library.
+// This library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this library.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef UNIVERSAL_COMPILER_LIBRARY_GRAMMAR_MATCHER_LEXER
+#define UNIVERSAL_COMPILER_LIBRARY_GRAMMAR_MATCHER_LEXER
+
+#include "CodeToRules.hpp"
+#include "Common/Identity.hpp"
+#include "Common/TAVLHelper.hpp"
+#include "Common/Tfuncs.hpp"
+#include "Common/Tlist.hpp"
+#include "Common/Tstring.hpp"
+#include "EBNF.hpp"
+#include "TAVL.hpp"
+#include "Utils.hpp"
+#include <type_traits>
+namespace Compiler
+{
+    namespace Impl
+    {
+        inline constexpr char16_t EMPTY_TRANS_EDGE = -1;
+        inline constexpr unsigned START_STATE      = 0;
+        inline constexpr unsigned END_STATE        = 1;
+        template <unsigned From, unsigned To, char16_t Ch>
+        struct fsa_edge
+        {
+            static constexpr unsigned from_state = From;
+            static constexpr unsigned to_state   = To;
+            static constexpr char16_t character  = Ch;
+        };
+        template <typename TSTR,
+                  unsigned Next,
+                  unsigned Start = 1,
+                  unsigned End   = 0>
+        struct t_string_to_nfa
+        {
+            static_assert(is_t_string_v<TSTR>);
+            template <unsigned next, typename T>
+            struct for_each_char;
+            template <unsigned next, char ch, char... chs>
+            struct for_each_char<next, t_string<ch, chs...>>
+            {
+                using current_edge = fsa_edge<next, next + 1, ch>;
+                static constexpr unsigned next_state_used = next + 1;
+                static constexpr unsigned next_state_unused =
+                    next_state_used + 1;
+                using type = tavl::tavl_insert_t<
+                    typename for_each_char<next_state_used,
+                                           t_string<chs...>>::type,
+                    value_wrapper<next>,
+                    current_edge>;
+            };
+            static constexpr unsigned next = Next;
+        };
+        inline namespace idea_impl
+        {
+            // implementation of the IDEA algorithm (Incremental Determinization
+            // of Expanding Automata)
+
+            // main data structures:
+            // DFA:
+            // tavl_node<L, R, H,
+            //     value_t<DFA_STATE>,
+            //     tavl_node<L, R, H,
+            //         value_t<DFA_STATE>,
+            //          fsa_edge
+            //     >
+            // >
+            // d to ||d||:
+            // tavl_node<L, R, H,
+            //     value_t<DFA_STATE>,
+            //     tavl_node<L, R, H, value_t<NFA_STATE>>
+            // >
+            // delta(d):
+            // tavl_node<L, R, H,
+            //     value_t<DFA_STATE>,
+            //     value_t<LEN>
+            // >
+            // B (buds):
+            // type_list<bud<D, L, N>...>
+            // R:
+            // type_list<value_t<DFS_STATE>>
+
+            template <typename DFA, unsigned from, unsigned to>
+            using fsa_get_values_t = typename tavl::tavl_find_t<
+                typename tavl::tavl_find_t<DFA, value_wrapper<from>>::value,
+                value_wrapper<to>>::value;
+            // helper functions
+            inline namespace dfa_remove_edge_impl
+            {
+                template <typename DFA, typename E>
+                using fsa_remove_to_h = tavl::tavl_remove_t<
+                    typename tavl::
+                        tavl_find_t<DFA, value_wrapper<E::from_state>>::value,
+                    value_wrapper<E::to_state>>;
+                template <typename DFA, typename E>
+                using fsa_update_to_h = tavl::tavl_update_t<
+                    typename tavl::
+                        tavl_find_t<DFA, value_wrapper<E::from_state>>::value,
+                    value_wrapper<E::to_state>,
+                    tavl::tavl_remove_t<
+                        fsa_get_values_t<DFA, E::from_state, E::to_state>,
+                        E>>;
+            } // namespace dfa_remove_edge_impl
+            template <typename DFA, typename E>
+            using dfa_remove_edge_t = tavl::tavl_update_t<
+                DFA,
+                value_wrapper<E::from_state>,
+                typename std::conditional_t<
+                    tavl::is_empty_node_v<
+                        typename fsa_get_values_t<DFA,
+                                                  E::from_state,
+                                                  E::to_state>::left> &&
+                        tavl::is_empty_node_v<
+                            typename fsa_get_values_t<DFA,
+                                                      E::from_state,
+                                                      E::to_state>::right>,
+                    // single, remove this node directly
+                    lazy_template<fsa_remove_to_h, DFA, E>,
+                    lazy_template<fsa_update_to_h, DFA, E>>::type>;
+            template <typename DFA>
+            using dfa_to_nfa = DFA;
+            template <typename DN, unsigned d>
+            using d_to_dn =
+                typename tavl::tavl_find_t<DN, value_wrapper<d>>::value;
+            template <typename L,
+                      typename V,
+                      template <typename V1, typename V2>
+                      typename Comp>
+            struct ordered_insert;
+            template <typename L,
+                      typename V,
+                      template <typename V1, typename V2>
+                      typename Comp>
+            using ordered_insert_t = typename ordered_insert<L, V, Comp>::type;
+            template <template <typename,
+                                typename,
+                                template <typename V1, typename V2>
+                                typename>
+                      typename O,
+                      typename L,
+                      typename V,
+                      template <typename V1, typename V2>
+                      typename Comp>
+            struct lazy_ordered_insert
+            {
+                using type = O<L, V, Comp>;
+            };
+            template <typename L,
+                      typename V,
+                      template <typename V1, typename V2>
+                      typename Comp>
+            struct ordered_insert
+            {
+                template <template <typename,
+                                    typename,
+                                    template <typename V1, typename V2>
+                                    typename>
+                          typename O,
+                          typename LL,
+                          typename VL,
+                          template <typename V1, typename V2>
+                          typename CompL>
+                struct lazy_ordered_insert
+                {
+                    using type =
+                        type_list_push_front<O<type_list_tail<LL>, VL, CompL>,
+                                             type_list_top<LL>>;
+                };
+                static_assert(is_type_list_v<L>);
+                using current                     = type_list_top<L>;
+                static constexpr bool insert_here = !Comp<current, V>::value;
+                using type                        = typename std::conditional_t<
+                    insert_here,
+                    lazy_template<type_list_push_front, type_list_tail<L>, V>,
+                    lazy_ordered_insert<ordered_insert, L, V, Comp>>::type;
+            };
+            template <typename V,
+                      template <typename V1, typename V2>
+                      typename Comp>
+            struct ordered_insert<type_list<>, V, Comp>
+            {
+                using type = type_list<V>;
+            };
+            template <unsigned State, char16_t Label, typename NStates>
+            struct bud
+            {
+                static constexpr unsigned d = State;
+                static constexpr char16_t l = Label;
+                using N                     = NStates;
+            };
+            template <typename Delta>
+            struct bud_order
+            {
+                template <typename B1, typename B2>
+                struct order_func
+                {
+                    static constexpr unsigned len_1 =
+                        tavl::tavl_find_t<Delta,
+                                          value_wrapper<B1::d>>::value::value;
+                    static constexpr unsigned len_2 =
+                        tavl::tavl_find_t<Delta,
+                                          value_wrapper<B2::d>>::value::value;
+                    static constexpr bool value = len_1 < len_2;
+                };
+            };
+            template <unsigned D, typename Buds, typename Delta>
+            struct reposition_buds
+            {
+                template <typename PrevList, typename L>
+                struct find_d
+                {
+                    using current              = type_list_top<L>;
+                    static constexpr bool is_d = current::d == D;
+                    using prev                 = typename std::conditional_t<
+                        is_d,
+                        lazy_ordered_insert<
+                            ordered_insert_t,
+                            PrevList,
+                            current,
+                            bud_order<Delta>::template order_func>,
+                        lazy_template<type_list_push_back, PrevList, current>>::
+                        type;
+                    using type = typename find_d<prev, type_list_tail<L>>::type;
+                };
+                template <typename L>
+                struct find_d<L, type_list<>>
+                {
+                    using type = L;
+                };
+                using type = typename find_d<type_list<>, Buds>::type;
+            };
+            template <char16_t l, typename N, typename NFA>
+            struct calc_closure
+            {
+                template <typename S, typename>
+                struct for_each_state
+                {
+                    using outs = typename tavl::tavl_find_t<NFA, S>::value;
+                    template <typename SO, typename Edges>
+                    struct for_each_entering
+                    {
+                        using target_edge = fsa_edge<S::value, SO::value, l>;
+                        using type        = std::conditional_t<
+                            tavl::tavl_contain_v<Edges, target_edge>,
+                            tavl::kv_pair<SO, std::true_type>,
+                            tavl::empty_node>;
+                    };
+                    using type = tavl::tavl_for_each_t<outs,
+                                                       for_each_entering,
+                                                       tavl::tavl_union_3,
+                                                       tavl::empty_node>;
+                };
+                using type = tavl::tavl_for_each_t<N,
+                                                   for_each_state,
+                                                   tavl::tavl_union_3,
+                                                   tavl::empty_node>;
+            };
+            template <char16_t l, typename N, typename NFA>
+            using calc_closure_t = typename calc_closure<l, N, NFA>::type;
+            template <typename N, typename NFA>
+            struct empty_closure
+            {
+            private:
+                template <typename States>
+                using calc = calc_closure_t<EMPTY_TRANS_EDGE, States, NFA>;
+
+            public:
+                using type =
+                    typename do_until<tavl::tavl_is_same, calc, N>::type;
+            };
+            template <typename N, typename NFA>
+            using empty_closure_t = typename empty_closure<N, NFA>::type;
+            template <char16_t l, typename N, typename NFA>
+            struct l_closure
+            {
+                using type = empty_closure_t<calc_closure_t<l, N, NFA>, NFA>;
+            };
+            template <char16_t l, typename N, typename NFA>
+            using l_closure_t = typename l_closure<l, N, NFA>::type;
+            template <unsigned D, typename Buds, typename Delta>
+            using reposition_buds_t =
+                typename reposition_buds<D, Buds, Delta>::type;
+            template <typename D, typename Buds, typename Delta>
+            using reposition_buds_wrapper_t =
+                reposition_buds_t<D::value, Buds, Delta>;
+            template <unsigned D,
+                      unsigned Len,
+                      typename Delta,
+                      typename Buds,
+                      typename Reloc,
+                      bool update>
+            struct relocate_without_empty_impl
+            {
+                using delta = Delta;
+                using buds  = Buds;
+                using reloc = Reloc;
+            };
+            template <unsigned D,
+                      unsigned Len,
+                      typename Delta,
+                      typename Buds,
+                      typename Reloc>
+            struct relocate_without_empty_impl<D, Len, Delta, Buds, Reloc, true>
+            {
+                using delta = tavl::
+                    tavl_update_t<Delta, value_wrapper<D>, value_wrapper<Len>>;
+                using buds  = reposition_buds_t<D, Buds, Delta>;
+                using reloc = type_list_push_back<Reloc, value_wrapper<D>>;
+            };
+            template <unsigned D,
+                      unsigned Len,
+                      typename Delta,
+                      typename Buds,
+                      typename Reloc>
+            struct relocate_without_empty
+            {
+                static_assert(tavl::tavl_contain_v<Delta, value_wrapper<D>>);
+                static constexpr bool need_update =
+                    tavl::tavl_find_t<Delta, value_wrapper<D>>::value > Len;
+                using delta =
+                    typename relocate_without_empty_impl<D,
+                                                         Len,
+                                                         Delta,
+                                                         Buds,
+                                                         Reloc,
+                                                         need_update>::delta;
+                using buds =
+                    typename relocate_without_empty_impl<D,
+                                                         Len,
+                                                         Delta,
+                                                         Buds,
+                                                         Reloc,
+                                                         need_update>::buds;
+                using reloc =
+                    typename relocate_without_empty_impl<D,
+                                                         Len,
+                                                         Delta,
+                                                         Buds,
+                                                         Reloc,
+                                                         need_update>::reloc;
+            };
+            template <typename Reloc,
+                      typename Delta,
+                      typename DFA,
+                      typename Buds>
+            struct propagate_without_empty
+            {
+                template <typename RDB>
+                struct do_propagate
+                {
+                    using last_reloc = type_list_top<RDB>;
+                    using last_delta = type_list_get<RDB, 1>;
+                    using last_buds  = type_list_get<RDB, 2>;
+                    static constexpr unsigned current_state =
+                        type_list_top<last_reloc>::value;
+                    static constexpr unsigned child_len =
+                        tavl::tavl_find_t<
+                            last_delta,
+                            type_list_top<last_reloc>>::value::value +
+                        1;
+                    template <typename DfaState, typename Edgs>
+                    struct get_state
+                    {
+                        using type = DfaState;
+                    };
+                    template <typename Prev, typename State>
+                    struct do_update
+                    {
+                        using last_reloc = type_list_top<Prev>;
+                        using last_delta = type_list_get<Prev, 1>;
+                        using last_buds  = type_list_get<Prev, 2>;
+                        static constexpr bool should_update =
+                            tavl::tavl_find_t<last_delta, State>::value::value >
+                            child_len;
+                        using reloc = typename std::conditional_t<
+                            should_update,
+                            lazy_template<type_list_push_back,
+                                          last_reloc,
+                                          State>,
+                            identity<last_reloc>>::type;
+                        using delta = typename std::conditional_t<
+                            should_update,
+                            lazy_template<tavl::tavl_update_t,
+                                          last_delta,
+                                          State,
+                                          value_wrapper<child_len>>,
+                            identity<last_delta>>::type;
+                        using buds = typename std::conditional_t<
+                            should_update,
+                            lazy_template<reposition_buds_wrapper_t,
+                                          State,
+                                          last_buds,
+                                          delta>,
+                            identity<last_buds>>::type;
+                        using type = type_list<reloc, delta, buds>;
+                    };
+                    using for_each_chlid = tavl::tavl_for_each_middle_order_t<
+                        typename tavl::
+                            tavl_find_t<DFA, type_list_top<last_reloc>>::value,
+                        get_state,
+                        do_update,
+                        RDB>;
+                    template <typename B>
+                    struct get_current_len
+                    {
+                        using type = value_wrapper<
+                            tavl::tavl_find_t<
+                                type_list_top<for_each_chlid>,
+                                value_wrapper<type_list_top<B>::d>>::value +
+                            1>;
+                    };
+                    using len_type = typename std::conditional_t<
+                        std::is_same_v<type_list_get<for_each_chlid, 2>,
+                                       type_list<>>,
+                        identity<value_wrapper<0>>,
+                        lazy_template<get_current_len,
+                                      type_list_get<for_each_chlid, 2>>>::type;
+                    using type = type_list_push_back<for_each_chlid, len_type>;
+                };
+                template <typename, typename Current>
+                struct propagate_end_cond
+                {
+                    using reloc = type_list_get<Current, 0>;
+                    static constexpr unsigned current_len =
+                        type_list_get<Current, 3>::value;
+
+                    template <typename D>
+                    struct lazy
+                    {
+                        using type = value_wrapper<(
+                            current_len != 0 &&
+                            tavl::tavl_find_t<D, type_list_top<reloc>>::value::
+                                    value > current_len)>;
+                    };
+                    static constexpr bool value = std::conditional_t<
+                        std::is_same_v<reloc, type_list<>>,
+                        identity<std::true_type>,
+                        lazy<type_list_get<Current, 1>>>::type::value;
+                };
+                using type =
+                    typename do_until<propagate_end_cond,
+                                      do_propagate,
+                                      type_list<Reloc, Delta, Buds>>::type;
+
+                using reloc = type_list_top<type>;
+                using delta = type_list_get<type, 1>;
+                using buds  = type_list_get<type, 2>;
+            };
+            template <typename Delta, typename DFA, typename Buds>
+            struct propagate_without_empty<type_list<>, Delta, DFA, Buds>
+            {
+                using delta = Delta;
+                using buds  = Buds;
+                using reloc = type_list<>;
+            };
+            template <typename Reloc,
+                      typename Delta,
+                      typename DFA,
+                      typename Buds>
+            struct propagate_empty
+            {
+                template <typename RDB>
+                struct do_propagate
+                {
+                    using last_reloc = type_list_top<RDB>;
+                    using last_delta = type_list_get<RDB, 1>;
+                    using last_buds  = type_list_get<RDB, 2>;
+                    static constexpr unsigned current_state =
+                        type_list_top<last_reloc>::value;
+                    static constexpr unsigned child_len =
+                        tavl::tavl_find_t<
+                            last_delta,
+                            type_list_top<last_reloc>>::value::value +
+                        1;
+                    template <typename DfaState, typename Edgs>
+                    struct get_state
+                    {
+                        using type = DfaState;
+                    };
+                    template <typename Prev, typename State>
+                    struct do_update
+                    {
+                        using last_reloc = type_list_top<Prev>;
+                        using last_delta = type_list_get<Prev, 1>;
+                        using last_buds  = type_list_get<Prev, 2>;
+                        static constexpr bool should_update =
+                            tavl::tavl_find_t<last_delta, State>::value::value >
+                            child_len;
+                        using reloc = typename std::conditional_t<
+                            should_update,
+                            lazy_template<type_list_push_back,
+                                          last_reloc,
+                                          State>,
+                            identity<last_reloc>>::type;
+                        using delta = typename std::conditional_t<
+                            should_update,
+                            lazy_template<tavl::tavl_update_t,
+                                          last_delta,
+                                          State,
+                                          value_wrapper<child_len>>,
+                            identity<last_delta>>::type;
+                        using buds = typename std::conditional_t<
+                            should_update,
+                            lazy_template<reposition_buds_wrapper_t,
+                                          State,
+                                          last_buds,
+                                          delta>,
+                            identity<last_buds>>::type;
+                        using type = type_list<reloc, delta, buds>;
+                    };
+                    using for_each_chlid = tavl::tavl_for_each_middle_order_t<
+                        typename tavl::
+                            tavl_find_t<DFA, type_list_top<last_reloc>>::value,
+                        get_state,
+                        do_update,
+                        RDB>;
+                    template <typename B>
+                    struct get_current_len
+                    {
+                        using type = value_wrapper<
+                            tavl::tavl_find_t<
+                                type_list_top<for_each_chlid>,
+                                value_wrapper<type_list_top<B>::d>>::value +
+                            1>;
+                    };
+                    using len_type = typename std::conditional_t<
+                        std::is_same_v<type_list_get<for_each_chlid, 2>,
+                                       type_list<>>,
+                        identity<value_wrapper<0>>,
+                        lazy_template<get_current_len,
+                                      type_list_get<for_each_chlid, 2>>>::type;
+                    using type = type_list_push_back<for_each_chlid, len_type>;
+                };
+                using type =
+                    typename do_propagate<type_list<Reloc, Delta, Buds>>::type;
+                using reloc = type_list_top<type>;
+                using delta = type_list_get<type, 1>;
+                using buds  = type_list_get<type, 2>;
+            };
+            template <typename Delta, typename DFA, typename Buds>
+            struct propagate_empty<type_list<>, Delta, DFA, Buds>
+            {
+                using reloc = type_list<>;
+                using delta = Delta;
+                using buds  = Buds;
+            };
+            template <unsigned D,
+                      unsigned Len,
+                      typename Delta,
+                      typename Buds,
+                      typename Reloc,
+                      typename DFA>
+            struct relocate_empty
+            {
+                static_assert(tavl::tavl_contain_v<Delta, value_wrapper<D>>);
+                static constexpr bool need_update =
+                    tavl::tavl_find_t<Delta, value_wrapper<D>>::value > Len;
+                using delta_p =
+                    typename relocate_without_empty_impl<D,
+                                                         Len,
+                                                         Delta,
+                                                         Buds,
+                                                         Reloc,
+                                                         need_update>::delta;
+                using buds_p =
+                    typename relocate_without_empty_impl<D,
+                                                         Len,
+                                                         Delta,
+                                                         Buds,
+                                                         Reloc,
+                                                         need_update>::buds;
+                using reloc_p =
+                    typename relocate_without_empty_impl<D,
+                                                         Len,
+                                                         Delta,
+                                                         Buds,
+                                                         Reloc,
+                                                         need_update>::reloc;
+                using delta =
+                    typename propagate_empty<reloc_p, delta_p, DFA, buds_p>::
+                        delta;
+                using buds =
+                    typename propagate_empty<reloc_p, delta_p, DFA, buds_p>::
+                        buds;
+                using reloc =
+                    typename propagate_empty<reloc_p, delta_p, DFA, buds_p>::
+                        reloc;
+            };
+            template <unsigned D,
+                      unsigned Len,
+                      typename Delta,
+                      typename Buds,
+                      typename Reloc,
+                      typename DFA,
+                      bool empty>
+            struct relocate
+            {
+                using delta = typename relocate_without_empty<D,
+                                                              Len,
+                                                              Delta,
+                                                              Buds,
+                                                              Reloc>::delta;
+                using buds  = typename relocate_without_empty<D,
+                                                             Len,
+                                                             Delta,
+                                                             Buds,
+                                                             Reloc>::buds;
+                using reloc = typename relocate_without_empty<D,
+                                                              Len,
+                                                              Delta,
+                                                              Buds,
+                                                              Reloc>::reloc;
+            };
+            template <unsigned D,
+                      unsigned Len,
+                      typename Delta,
+                      typename Buds,
+                      typename Reloc,
+                      typename DFA>
+            struct relocate<D, Len, Delta, Buds, Reloc, DFA, true>
+            {
+                using delta =
+                    typename relocate_empty<D, Len, Delta, Buds, Reloc, DFA>::
+                        delta;
+                using buds =
+                    typename relocate_empty<D, Len, Delta, Buds, Reloc, DFA>::
+                        buds;
+                using reloc =
+                    typename relocate_empty<D, Len, Delta, Buds, Reloc, DFA>::
+                        reloc;
+            };
+            template <typename Reloc,
+                      typename Delta,
+                      typename DFA,
+                      typename Buds,
+                      bool empty>
+            struct propagate
+            {
+                using impl = typename std::conditional_t<
+                    empty,
+                    lazy_template<propagate_empty, Reloc, Delta, DFA, Buds>,
+                    lazy_template<propagate_without_empty,
+                                  Reloc,
+                                  Delta,
+                                  DFA,
+                                  Buds>>::type;
+                using delta = typename impl::delta;
+                using buds  = typename impl::buds;
+                using reloc = typename impl::reloc;
+            };
+            template <unsigned D,
+                      unsigned D2,
+                      typename Delta,
+                      typename DFA,
+                      typename Buds,
+                      typename Reloc,
+                      bool empty>
+            struct merge
+            {
+                static_assert(tavl::tavl_contain_v<Delta, value_wrapper<D>> &&
+                              tavl::tavl_contain_v<Delta, value_wrapper<D2>>);
+                // swap d and d' if necessary
+                static constexpr unsigned d =
+                    ((tavl::tavl_find_t<Delta, value_wrapper<D>>::value::value >
+                      tavl::tavl_find_t<Delta,
+                                        value_wrapper<D2>>::value::value) ?
+                         D2 :
+                         D);
+                static constexpr unsigned d2 = (d == D ? D2 : D);
+                static_assert(d != d2);
+                // redirect
+                template <typename E>
+                using new_edge =
+                    fsa_edge<E::from_state == d2 ? d : E::from_state,
+                             E::to_state == d2 ? d : E::to_state,
+                             E::character>;
+                template <typename State, typename Outs>
+                struct for_each_exiting
+                {
+                    // other to d'
+                    using type = std::conditional_t<
+                        tavl::tavl_contain_v<Outs, value_wrapper<d2>>,
+                        tavl::kv_pair<new_edge<typename tavl::tavl_find_t<
+                                          Outs,
+                                          value_wrapper<d2>>::value>,
+                                      typename tavl::tavl_find_t<
+                                          Outs,
+                                          value_wrapper<d2>>::value>,
+                        tavl::empty_node>;
+                };
+                template <typename Outs>
+                struct for_each_exiting<value_wrapper<d2>, Outs>
+                {
+                    // d' to other
+
+                    template <typename E, typename>
+                    struct rewrite_all
+                    {
+                        using type =
+                            tavl::tavl_insert_t<tavl::empty_node, new_edge<E>>;
+                    };
+                    using type = tavl::tavl_for_each_t<Outs,
+                                                       rewrite_all,
+                                                       tavl::tavl_union_3,
+                                                       tavl::empty_node>;
+                };
+                using modified_edges = tavl::tavl_for_each_t<DFA,
+                                                             for_each_exiting,
+                                                             tavl::tavl_union_3,
+                                                             tavl::empty_node>;
+                template <typename Dfa, typename E, typename NE>
+                using update_edge = tavl::tavl_update_t<
+                    Dfa,
+                    value_wrapper<E::from_state>,
+                    tavl::tavl_update_t<
+                        typename tavl::tavl_find_t<
+                            Dfa,
+                            value_wrapper<E::from_state>>::value,
+                        value_wrapper<E::to_state>,
+                        NE>>;
+                template <typename Dfa, typename E>
+                using insert_edge = tavl::tavl_update_t<
+                    Dfa,
+                    value_wrapper<E::from_state>,
+                    typename std::conditional_t<
+                        tavl::tavl_contain_v<
+                            tavl::tavl_find_t<Dfa,
+                                              value_wrapper<E::from_state>>,
+                            value_wrapper<E::to_state>>,
+                        lazy_template<
+                            set_try_insert_t,
+                            tavl::tavl_find_t<
+                                tavl::tavl_find_t<Dfa,
+                                                  value_wrapper<E::from_state>>,
+                                value_wrapper<E::to_state>>,
+                            E>,
+                        lazy_template<
+                            tavl::tavl_insert_t,
+                            tavl::tavl_find_t<Dfa,
+                                              value_wrapper<E::from_state>>,
+                            value_wrapper<E::to_state>,
+                            tavl::tavl_insert_t<tavl::empty_node, E>>>::type>;
+                template <typename CurrDFA, typename Pair>
+                struct do_redirect
+                {
+                    using new_e       = typename Pair::key;
+                    using old_e       = typename Pair::value;
+                    using old_removed = typename std::conditional_t<
+                        std::is_same_v<old_e, std::true_type>,
+                        lazy_template<insert_edge, CurrDFA, new_e>,
+                        lazy_template<update_edge, CurrDFA, old_e, new_e>>::
+                        type;
+                };
+                using redirected = tavl::tavl_for_each_middle_order_t<
+                    modified_edges,
+                    postpone_to_merge,
+                    do_redirect,
+                    tavl::tavl_remove_t<DFA, value_wrapper<d2>>>;
+                // convert to d all buds in B relevant to d'
+                template <typename S>
+                using set_update_helper =
+                    set_try_insert_t<tavl::tavl_remove_t<S, value_wrapper<d2>>,
+                                     value_wrapper<d>>;
+                template <typename B>
+                using new_bud = bud<
+                    (B::d == d2 ? d : B::d),
+                    B::l,
+                    typename std::conditional_t<
+                        tavl::tavl_contain_v<typename B::N, value_wrapper<d2>>,
+                        lazy_template<set_update_helper, typename B::N>,
+                        identity<typename B::N>>::type>;
+                template <typename Prev, typename B>
+                struct rewrite_buds
+                {
+                    using bud  = type_list_top<B>;
+                    using type = typename rewrite_buds<
+                        type_list_push_back<Prev, new_bud<bud>>,
+                        type_list_tail<B>>::type;
+                };
+                template <typename B>
+                struct rewrite_buds<B, type_list<>>
+                {
+                    using type = B;
+                };
+                using rewrited_buds =
+                    typename rewrite_buds<type_list<>, Buds>::type;
+                // relocate
+                template <typename Prev, typename Curr>
+                struct call_relocate
+                {
+                    using state = typename Curr::key;
+                    using type =
+                        relocate<state::value,
+                                 tavl::tavl_find_t<Delta, value_wrapper<d>>::
+                                         value::value +
+                                     1,
+                                 typename Prev::delta,
+                                 typename Prev::buds,
+                                 typename Prev::reloc,
+                                 redirected,
+                                 empty>;
+                };
+                struct init_rdb
+                {
+                    using reloc = Reloc;
+                    using buds  = rewrited_buds;
+                    using delta = Delta;
+                };
+                using reloc_result = tavl::tavl_for_each_middle_order_t<
+                    tavl::tavl_find_t<redirected, value_wrapper<d>>,
+                    postpone_to_merge,
+                    call_relocate,
+                    init_rdb>;
+
+                using dfa   = redirected;
+                using reloc = typename reloc_result::reloc;
+                using buds  = typename reloc_result::buds;
+                using delta = typename reloc_result::delta;
+            };
+            template <template <unsigned D,
+                                unsigned D2,
+                                typename Delta,
+                                typename DFA,
+                                typename Buds,
+                                typename Reloc,
+                                bool empty>
+                      typename T,
+                      unsigned D,
+                      unsigned D2,
+                      typename Delta,
+                      typename DFA,
+                      typename Buds,
+                      typename Reloc,
+                      bool empty>
+            struct lazy_merge
+            {
+                using type = T<D, D2, Delta, DFA, Buds, Reloc, empty>;
+            };
+            template <unsigned D,
+                      unsigned D2,
+                      typename DN,
+                      typename Buds,
+                      typename FD,
+                      typename FN,
+                      typename Delta,
+                      typename DFA,
+                      typename NFA,
+                      typename Reloc,
+                      unsigned Len,
+                      bool     empty>
+            struct prune;
+            template <template <unsigned D,
+                                unsigned D2,
+                                typename DN,
+                                typename Buds,
+                                typename FD,
+                                typename FN,
+                                typename Delta,
+                                typename DFA,
+                                typename NFA,
+                                typename Reloc,
+                                unsigned Len,
+                                bool     empty>
+                      typename T,
+                      unsigned D,
+                      unsigned D2,
+                      typename DN,
+                      typename Buds,
+                      typename FD,
+                      typename FN,
+                      typename Delta,
+                      typename DFA,
+                      typename NFA,
+                      typename Reloc,
+                      unsigned Len,
+                      bool     empty>
+            struct lazy_prune
+            {
+                using type = T<D,
+                               D2,
+                               DN,
+                               Buds,
+                               FD,
+                               FN,
+                               Delta,
+                               DFA,
+                               NFA,
+                               Reloc,
+                               Len,
+                               empty>;
+            };
+            template <unsigned D,
+                      typename N,
+                      typename DN,
+                      typename Buds,
+                      typename FD,
+                      typename FN,
+                      typename Delta,
+                      typename DFA,
+                      typename NFA,
+                      typename Reloc,
+                      unsigned Len,
+                      bool     empty,
+                      bool     precond>
+            struct extend_impl
+            {
+                // enlarge buds
+                using nd = tavl::tavl_difference_t<
+                    N,
+                    typename tavl::tavl_find_t<DN, value_wrapper<D>>::value>;
+                template <typename, typename E>
+                struct for_each_edge
+                {
+                    using type = tavl::kv_pair<value_wrapper<E::character>,
+                                               std::true_type>;
+                };
+                template <typename, typename Es>
+                struct for_each_entering
+                {
+                    using type = tavl::tavl_for_each_t<Es,
+                                                       for_each_edge,
+                                                       tavl::tavl_union_3,
+                                                       tavl::empty_node>;
+                };
+                template <typename S, typename>
+                struct get_labels
+                {
+                    using outs = typename tavl::tavl_find_t<NFA, S>::value;
+                    using type = tavl::tavl_for_each_t<outs,
+                                                       for_each_entering,
+                                                       tavl::tavl_union_3,
+                                                       tavl::empty_node>;
+                };
+                using labels = tavl::tavl_for_each_t<nd,
+                                                     get_labels,
+                                                     tavl::tavl_union_3,
+                                                     tavl::empty_node>;
+                template <typename L, typename>
+                struct for_each_label
+                {
+                    using closure = l_closure_t<L::value, nd, NFA>;
+                    using type =
+                        std::conditional_t<tavl::is_empty_node_v<closure>,
+                                           int,
+                                           bud<D, L::value, nd>>;
+                };
+                template <typename Prev, typename Curr>
+                struct enlarge_buds
+                {
+                    using type =
+                        ordered_insert_t<Prev,
+                                         Curr,
+                                         bud_order<Delta>::template order_func>;
+                };
+                template <typename Prev>
+                struct enlarge_buds<Prev, int>
+                {
+                    using type = Prev;
+                };
+                using buds_enlarged =
+                    tavl::tavl_for_each_middle_order_t<labels,
+                                                       for_each_label,
+                                                       enlarge_buds,
+                                                       Buds>;
+                // enlarge ||d||
+                using dn = tavl::tavl_update_t<
+                    DN,
+                    value_wrapper<D>,
+                    tavl::tavl_union_t<
+                        typename tavl::tavl_find_t<DN, value_wrapper<D>>::value,
+                        N>>;
+                // deal with Fd
+                using fd = typename std::conditional_t<
+                    !tavl::tavl_contain_v<FD, value_wrapper<D>> &&
+                        !tavl::is_empty_node_v<tavl::tavl_intersect_t<N, FN>>,
+                    lazy_template<tavl::tavl_insert_t, FD, value_wrapper<D>>,
+                    identity<FD>>::type;
+                // merge?
+                template <typename d, typename n>
+                struct for_each_d
+                {
+                    using type = type_pair<
+                        std::bool_constant<tavl::tavl_is_same_v<
+                            n,
+                            typename tavl::tavl_find_t<DN, value_wrapper<D>>::
+                                value>>,
+                        d>;
+                };
+                template <typename L, typename R, typename C>
+                struct check_exist
+                {
+                    using type = std::conditional_t<
+                        L::first_type::value,
+                        L,
+                        std::conditional_t<R::first_type::value, R, C>>;
+                };
+                using same_state_ret = tavl::tavl_for_each_t<
+                    DN,
+                    for_each_d,
+                    check_exist,
+                    type_pair<std::false_type, value_wrapper<0>>>;
+                struct dummy_impl
+                {
+                    using dfa   = DFA;
+                    using reloc = Reloc;
+                    using buds  = buds_enlarged;
+                    using delta = Delta;
+                };
+                using pm_result = typename std::conditional_t<
+                    same_state_ret::first_type::value,
+                    std::conditional_t<
+                        (tavl::tavl_find_t<Delta,
+                                           typename same_state_ret::
+                                               second_type>::value::value +
+                             1 <
+                         Len),
+                        lazy_prune<prune,
+                                   D,
+                                   same_state_ret::second_type::value,
+                                   DN,
+                                   buds_enlarged,
+                                   FD,
+                                   FN,
+                                   Delta,
+                                   DFA,
+                                   NFA,
+                                   Reloc,
+                                   Len,
+                                   empty>,
+                        lazy_merge<merge,
+                                   D,
+                                   same_state_ret::second_type::value,
+                                   Delta,
+                                   DFA,
+                                   buds_enlarged,
+                                   Reloc,
+                                   empty>>, // dfa, reloc, buds, delta
+                    identity<dummy_impl>>::type;
+                // dn
+                // fd
+                using dfa   = typename pm_result::dfa;
+                using reloc = typename pm_result::reloc;
+                using buds  = typename pm_result::buds;
+                using delta = typename pm_result::delta;
+            };
+            template <unsigned D,
+                      typename N,
+                      typename DN,
+                      typename Buds,
+                      typename FD,
+                      typename FN,
+                      typename Delta,
+                      typename DFA,
+                      typename NFA,
+                      typename Reloc,
+                      unsigned Len,
+                      bool     empty>
+            struct extend_impl<D,
+                               N,
+                               DN,
+                               Buds,
+                               FD,
+                               FN,
+                               Delta,
+                               DFA,
+                               NFA,
+                               Reloc,
+                               Len,
+                               empty,
+                               false>
+            {
+                using dn    = DN;
+                using fd    = FD;
+                using dfa   = DFA;
+                using reloc = Reloc;
+                using buds  = Buds;
+                using delta = Delta;
+            };
+            template <unsigned D,
+                      typename N,
+                      typename DN,
+                      typename Buds,
+                      typename FD,
+                      typename FN,
+                      typename Delta,
+                      typename DFA,
+                      typename NFA,
+                      typename Reloc,
+                      unsigned Len,
+                      bool     empty>
+            struct extend
+            {
+                static constexpr bool precond = tavl::tavl_is_subset_v<
+                    N,
+                    typename tavl::tavl_find_t<DN, value_wrapper<D>>::value>;
+                using impl  = extend_impl<D,
+                                         N,
+                                         DN,
+                                         Buds,
+                                         FD,
+                                         FN,
+                                         Delta,
+                                         DFA,
+                                         NFA,
+                                         Reloc,
+                                         Len,
+                                         empty,
+                                         precond>;
+                using dn    = typename impl::dn;
+                using fd    = typename impl::fd;
+                using dfa   = typename impl::dfa;
+                using reloc = typename impl::reloc;
+                using buds  = typename impl::buds;
+                using delta = typename impl::delta;
+            };
+            template <unsigned D,
+                      unsigned D2,
+                      typename DN,
+                      typename Buds,
+                      typename FD,
+                      typename FN,
+                      typename Delta,
+                      typename DFA,
+                      typename NFA,
+                      typename Reloc,
+                      unsigned Len,
+                      bool     empty>
+            struct prune
+            {
+                // redirect
+                // copied from merge<>
+                static constexpr unsigned d  = D2;
+                static constexpr unsigned d2 = D;
+                template <typename E>
+                using new_edge =
+                    fsa_edge<E::from_state == d2 ? d : E::from_state,
+                             E::to_state == d2 ? d : E::to_state,
+                             E::character>;
+                template <typename State, typename Outs>
+                struct for_each_exiting
+                {
+                    // entering d
+                    using type = std::conditional_t<
+                        tavl::tavl_contain_v<Outs, value_wrapper<d2>>,
+                        tavl::kv_pair<new_edge<typename tavl::tavl_find_t<
+                                          Outs,
+                                          value_wrapper<d2>>::value>,
+                                      typename tavl::tavl_find_t<
+                                          Outs,
+                                          value_wrapper<d2>>::value>,
+                        tavl::empty_node>;
+                };
+                using modified_edges = tavl::tavl_for_each_t<DFA,
+                                                             for_each_exiting,
+                                                             tavl::tavl_union_3,
+                                                             tavl::empty_node>;
+                template <typename Dfa, typename E, typename NE>
+                using update_edge = tavl::tavl_update_t<
+                    Dfa,
+                    value_wrapper<E::from_state>,
+                    tavl::tavl_update_t<
+                        typename tavl::tavl_find_t<
+                            Dfa,
+                            value_wrapper<E::from_state>>::value,
+                        value_wrapper<E::to_state>,
+                        NE>>;
+                template <typename CurrDFA, typename Pair>
+                struct do_redirect
+                {
+                    using new_e       = typename Pair::key;
+                    using old_e       = typename Pair::value;
+                    using old_removed = update_edge<CurrDFA, old_e, new_e>;
+                };
+                using redirected = tavl::tavl_for_each_middle_order_t<
+                    modified_edges,
+                    postpone_to_merge,
+                    do_redirect,
+                    tavl::tavl_remove_t<DFA, value_wrapper<d2>>>;
+                // init P
+                using p =
+                    type_list<type_pair<value_wrapper<D>, value_wrapper<D2>>>;
+                // until p is empty
+                template <typename SO, typename Edge>
+                struct get_edge
+                {
+                    using type = Edge;
+                };
+                template <typename Dfa, typename b>
+                struct dfa_bud_wrapper
+                {
+                    using dfa  = Dfa;
+                    using buds = b;
+                };
+                template <typename DE,
+                          typename Dfa,
+                          typename B,
+                          typename DToN,
+                          typename Nfa>
+                struct remove_and_surrogate_with_buds
+                {
+                    static constexpr unsigned d = DE::value;
+                    template <typename E>
+                    using get_bud =
+                        bud<E::from_state,
+                            E::character,
+                            l_closure_t<
+                                E::character,
+                                tavl::tavl_find_t<DToN,
+                                                  value_wrapper<E::from_state>>,
+                                NFA>>;
+                    template <typename S, typename Outs>
+                    struct for_each_entering
+                    {
+                        using type = typename std::conditional_t<
+                            tavl::tavl_contain_v<Outs, DE>,
+                            lazy_template<tavl_find_value, Outs, DE>,
+                            identity<int>>::type;
+                    };
+                    template <typename Prev, typename E>
+                    struct do_remove
+                    {
+                        using dfa  = typename Prev::first_type;
+                        using buds = typename Prev::second_type;
+                        using type = type_pair<
+                            dfa_remove_edge_t<dfa, E>,
+                            ordered_insert_t<
+                                buds,
+                                get_bud<E>,
+                                bud_order<Delta>::template order_func>>;
+                    };
+                    template <typename Prev>
+                    struct do_remove<Prev, int>
+                    {
+                        using type = Prev;
+                    };
+                    using type =
+                        tavl::tavl_for_each_middle_order_t<Dfa,
+                                                           for_each_entering,
+                                                           do_remove,
+                                                           type_pair<Dfa, B>>;
+                    using dfa  = typename type::first_type;
+                    using buds = typename type::second_type;
+                };
+                template <typename Prev, typename Edge>
+                struct for_each_transition
+                {
+                    using dn_pre    = type_list_get<Prev, 0>;
+                    using fd_pre    = type_list_get<Prev, 1>;
+                    using dfa_pre   = type_list_get<Prev, 2>;
+                    using reloc_pre = type_list_get<Prev, 3>;
+                    using buds_pre  = type_list_get<Prev, 4>;
+                    using delta_pre = type_list_get<Prev, 5>;
+                    using p_pre     = type_list_get<Prev, 6>;
+                    static constexpr unsigned d2_p =
+                        type_list_top<p_pre>::second_type::value;
+                    // remove t
+                    using dfa_remove_t = dfa_remove_edge_t<dfa_pre, Edge>;
+                    static constexpr bool further_ops =
+                        tavl::tavl_find_t<
+                            delta_pre,
+                            value_wrapper<Edge::to_state>>::value > Len;
+                    // remove those entering d1'
+                    using remove_impl = typename std::conditional_t<
+                        further_ops,
+                        lazy_template<remove_and_surrogate_with_buds,
+                                      value_wrapper<Edge::from_state>,
+                                      dfa_remove_t,
+                                      buds_pre,
+                                      dn_pre,
+                                      NFA>,
+                        lazy_template<dfa_bud_wrapper, dfa_pre, buds_pre>>::
+                        type;
+                    using buds_removed = typename remove_impl::buds;
+                    using dfa_removed  = typename remove_impl::dfa;
+                    // get d2'
+                    template <typename S, typename E>
+                    struct find_d2
+                    {
+                        using type = type_pair<
+                            std::bool_constant<E::character == Edge::character>,
+                            S>;
+                    };
+                    template <typename L, typename R, typename C>
+                    struct merge_result_of_finding_d2
+                    {
+                        using type = std::conditional_t<
+                            L::first_type::value,
+                            L,
+                            std::conditional_t<R::first_type::value, R, C>>;
+                    };
+                    static_assert(
+                        !further_ops ||
+                        tavl::tavl_for_each_t<
+                            dfa_removed,
+                            find_d2,
+                            merge_result_of_finding_d2,
+                            type_pair<std::false_type,
+                                      value_wrapper<d2_p>>>::first_type::value);
+                    // d2':
+                    // tavl::tavl_for_each_t<
+                    // dfa_removed,
+                    // find_d2,
+                    // merge_result_of_finding_d2,
+                    // type_pair<std::false_type,
+                    //           value_wrapper<d2_p>>>::second_type::
+                    template <unsigned D2P>
+                    using d2_enter_t = typename tavl::tavl_for_each_t<
+                        dfa_removed,
+                        find_d2,
+                        merge_result_of_finding_d2,
+                        type_pair<std::false_type,
+                                  value_wrapper<D2P>>>::second_type;
+                    // value
+
+                    // append or Extend
+                    struct result_type_wrapper
+                    {
+                        using type = type_list<dn_pre,
+                                               fd_pre,
+                                               dfa_removed,
+                                               reloc_pre,
+                                               buds_removed,
+                                               delta_pre,
+                                               p_pre>;
+                    };
+                    template <typename P>
+                    struct append
+                    {
+                        using type = type_list<dn_pre,
+                                               fd_pre,
+                                               dfa_removed,
+                                               reloc_pre,
+                                               buds_removed,
+                                               delta_pre,
+                                               type_list_push_back<p_pre, P>>;
+                    };
+                    template <typename D2_P>
+                    struct do_extend
+                    {
+                        static constexpr unsigned d2_enter =
+                            d2_enter_t<D2_P::value>::value;
+                        static constexpr unsigned d1_enter = Edge::to_state;
+                        using n_states =
+                            tavl::tavl_difference_t<d_to_dn<dn_pre, d2_enter>,
+                                                    d_to_dn<dn_pre, d1_enter>>;
+                        using impl = extend<d1_enter,
+                                            n_states,
+                                            dn_pre,
+                                            buds_removed,
+                                            fd_pre,
+                                            FN,
+                                            delta_pre,
+                                            dfa_removed,
+                                            NFA,
+                                            reloc_pre,
+                                            Len,
+                                            empty>;
+                        using type = type_list<typename impl::dn,
+                                               typename impl::fd,
+                                               typename impl::dfa,
+                                               typename impl::reloc,
+                                               typename impl::buds,
+                                               typename impl::delta,
+                                               p_pre>;
+                    };
+                    using type = typename std::conditional_t<
+                        further_ops,
+                        std::conditional_t<
+                            (tavl::tavl_find_t<delta_pre, d2_enter_t<d2_p>>::
+                                 value::value < Len),
+                            lazy_template<
+                                append,
+                                type_pair<value_wrapper<Edge::to_state>,
+                                          d2_enter_t<d2_p>>>,
+                            lazy_template<do_extend, value_wrapper<d2_p>>>,
+                        identity<result_type_wrapper>>::type::type;
+                };
+                template <typename NFDRBDP>
+                struct until_body
+                {
+                    using dn_pre    = type_list_get<NFDRBDP, 0>;
+                    using fd_pre    = type_list_get<NFDRBDP, 1>;
+                    using dfa_pre   = type_list_get<NFDRBDP, 2>;
+                    using reloc_pre = type_list_get<NFDRBDP, 3>;
+                    using buds_pre  = type_list_get<NFDRBDP, 4>;
+                    using delta_pre = type_list_get<NFDRBDP, 5>;
+                    using p_pre     = type_list_get<NFDRBDP, 6>;
+
+                    using first_pair = type_list_top<p_pre>;
+                    static constexpr unsigned d1 =
+                        first_pair::first_type::value;
+                    static constexpr unsigned d2 =
+                        first_pair::second_type::value;
+                    using for_each_trans_t = tavl::tavl_for_each_middle_order_t<
+                        typename tavl::tavl_find_t<dfa_pre,
+                                                   value_wrapper<d1>>::value,
+                        get_edge,
+                        for_each_transition,
+                        NFDRBDP>;
+                    // remove d1
+                    template <typename S, typename Outs>
+                    struct remove_d1
+                    {
+                        using type = tavl::kv_pair<
+                            S,
+                            tavl::tavl_remove_t<Outs, value_wrapper<d1>>>;
+                    };
+                    using dfa_removed = tavl::tavl_for_each_t<
+                        tavl::tavl_remove_t<type_list_get<for_each_trans_t, 2>,
+                                            value_wrapper<d1>>,
+                        remove_d1,
+                        tavl::tavl_union_3,
+                        tavl::empty_node>;
+                    template <typename Prev, typename B>
+                    struct remove_d1_buds
+                    {
+                        using remove_result = std::conditional_t<
+                            type_list_top<B>::d == d1,
+                            Prev,
+                            type_list_push_back<Prev, type_list_top<B>>>;
+                        using type =
+                            typename remove_d1_buds<remove_result,
+                                                    type_list_tail<B>>::type;
+                    };
+                    template <typename Prev>
+                    struct remove_d1_buds<Prev, type_list<>>
+                    {
+                        using type = Prev;
+                    };
+                    using buds_removed = typename remove_d1_buds<
+                        type_list<>,
+                        type_list_get<for_each_trans_t, 4>>::type;
+                    using type = type_list<
+                        type_list_get<for_each_trans_t, 0>,
+                        type_list_get<for_each_trans_t, 1>,
+                        dfa_removed,
+                        type_list_get<for_each_trans_t, 3>,
+                        buds_removed,
+                        type_list_get<for_each_trans_t, 5>,
+                        type_list_tail<type_list_get<for_each_trans_t, 6>>>;
+                };
+                template <typename, typename C>
+                struct until_end_cond
+                {
+                    static constexpr bool value =
+                        std::is_same_v<type_list_get<C, 6>, type_list<>>;
+                };
+                using repeat_until = typename do_until<
+                    until_end_cond,
+                    until_body,
+                    type_list<DN, FD, redirected, Reloc, Buds, Delta, p>>::type;
+
+                using dn    = type_list_get<repeat_until, 0>;
+                using fd    = type_list_get<repeat_until, 1>;
+                using dfa   = type_list_get<repeat_until, 2>;
+                using reloc = type_list_get<repeat_until, 3>;
+                using buds  = type_list_get<repeat_until, 4>;
+                using delta = type_list_get<repeat_until, 5>;
+            };
+            template <typename DFA, typename NFA>
+            struct idea
+            {
+            private:
+                // init B
+                static constexpr unsigned common_state = START_STATE;
+                using init_b_n_states =
+                    tavl::kv_pair<value_wrapper<common_state>>;
+                template <typename, typename Es>
+                struct init_b_get_trans
+                {
+                    using type = Es;
+                };
+                using init_b_trans = tavl::tavl_for_each_t<
+                    typename tavl::
+                        tavl_find_t<NFA, value_wrapper<common_state>>::value,
+                    init_b_get_trans,
+                    tavl::tavl_union_3,
+                    tavl::empty_node>;
+                template <typename E, typename>
+                struct init_b_create_bud
+                {
+                    using n_states =
+                        l_closure_t<E::character, init_b_n_states, NFA>;
+                    using type = bud<0, E::character, n_states>;
+                };
+                template <typename Prev, typename B>
+                struct init_b_buds
+                {
+                    using type = type_list_push_back<Prev, B>;
+                };
+                using buds_init =
+                    tavl::tavl_for_each_middle_order_t<init_b_trans,
+                                                       init_b_create_bud,
+                                                       init_b_buds,
+                                                       type_list<>>;
+                // init other data structures
+                //     dn
+                template <typename S, typename>
+                struct init_dn_for_each_entering
+                {
+                    using type = tavl::kv_pair<S>;
+                };
+                template <typename S, typename Outs>
+                struct init_dn_for_each_exiting
+                {
+                    using type = tavl::tavl_insert_t<
+                        tavl::tavl_for_each_t<Outs,
+                                              init_dn_for_each_entering,
+                                              tavl::tavl_union_3,
+                                              tavl::empty_node>,
+                        S>;
+                };
+                using dn_init = tavl::tavl_for_each_t<DFA,
+                                                      init_dn_for_each_exiting,
+                                                      tavl::tavl_union_3,
+                                                      tavl::empty_node>;
+                //     fd
+                using fd_init = tavl::kv_pair<value_wrapper<END_STATE>>;
+                //     reloc
+                using reloc_init = type_list<>;
+                //     delta
+
+            public:
+            };
+        } // namespace idea_impl
+    }     // namespace Impl
+    template <typename Rules>
+    struct lexer
+    {
+        template <typename Target, typename /* remaining*/, typename Symbol>
+        struct for_each_terminal_or_special
+        {
+            using switch_cond = type_list<Impl::terminal_string_flag,
+                                          Impl::special_sequence_flag>;
+        };
+    };
+} // namespace Compiler
+#endif
