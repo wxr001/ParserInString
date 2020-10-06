@@ -6,33 +6,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(ParserInString VERSION 1.0.0)
 
 add_executable(test test/test.cpp test/test_lexer.hpp)
-target_include_directories(test PRIVATE include)
-target_include_directories(test PRIVATE lib/TAVL)
-target_include_directories(test PRIVATE lib/static_print)
-target_include_directories(test PRIVATE lib/doctest/doctest)
 
 include(GNUInstallDirs)
-add_library(${PROJECT_NAME} INTERFACE)
-add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-include_directories(
-    include
-    lib/TAVL
-    lib/static_print)
+add_library(PIS INTERFACE)
 target_include_directories(
-    ${PROJECT_NAME}
+    PIS
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_include_directories(
-    ${PROJECT_NAME}
+    PIS
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/TAVL>
               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_include_directories(
-    ${PROJECT_NAME}
+    PIS
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/static_print>
               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
-install(TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}_Targets
+target_compile_features(PIS INTERFACE cxx_std_17)
+install(TARGETS PIS
+    EXPORT PIS_Targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -48,7 +39,7 @@ configure_package_config_file(
 INSTALL_DESTINATION
 ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
 
-install(EXPORT ${PROJECT_NAME}_Targets
+install(EXPORT PIS_Targets
     FILE ${PROJECT_NAME}Targets.cmake
     NAMESPACE ${PROJECT_NAME}::
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
@@ -57,3 +48,5 @@ install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION include/ParserInString)
 
+
+target_include_directories(test PRIVATE PIS)
