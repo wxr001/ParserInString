@@ -23,8 +23,8 @@
 #include "Common/TAVLHelper.hpp"
 #include "Common/Tlist.hpp"
 #include "Common/Tstring.hpp"
-#include "EBNF.hpp"
 #include "TAVL.hpp"
+#include "rules_common.hpp"
 #include <type_traits>
 namespace Compiler
 {

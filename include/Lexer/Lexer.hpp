@@ -432,14 +432,18 @@ namespace Compiler
             using grouped_data = typename do_parse_lexer_rule<
                 V,
                 type_list<NFA, Finite, Next, Start>>::type;
-            using nfa     = type_list_get<grouped_data, 0>;
-            using finite  = type_list_get<grouped_data, 1>;
-            using next    = type_list_get<grouped_data, 2>;
-            using new_nfa = fa_add_edge_t<Start,
-                                          value_wrapper<EMPTY_TRANS_EDGE>,
-                                          next,
-                                          nfa>;
-            using type    = typename do_parse_lexer_rule<
+            using nfa    = type_list_get<grouped_data, 0>;
+            using finite = type_list_get<grouped_data, 1>;
+            using next   = type_list_get<grouped_data, 2>;
+            using new_nfa =
+                fa_add_edge_t<Start,
+                              value_wrapper<EMPTY_TRANS_EDGE>,
+                              next,
+                              fa_add_edge_t<value_wrapper<next::value - 1>,
+                                            value_wrapper<EMPTY_TRANS_EDGE>,
+                                            next,
+                                            nfa>>;
+            using type = typename do_parse_lexer_rule<
                 type_list<Rest...>,
                 type_list<new_nfa,
                           finite,
@@ -842,6 +846,17 @@ namespace Compiler
         using sc = Impl::subset_construction<nfa, finite_nfa>;
 
         template <typename Set>
+        void dump_set_value(std::string& str) const
+        {
+            if constexpr (!std::is_same_v<Set, tavl::empty_node>)
+            {
+                dump_set_value<typename Set::left>(str);
+                str += to_string(typename Set::key::second_type{}) + "|";
+                dump_set_value<typename Set::right>(str);
+            }
+        }
+
+        template <typename Set>
         void dump_set(std::string& str) const
         {
             if constexpr (!std::is_same_v<Set, tavl::empty_node>)
@@ -908,6 +923,22 @@ namespace Compiler
                 str += "}\n";
                 dump_label<typename FA::value>(str);
                 dump<typename FA::right>(str);
+            }
+        }
+
+        template <typename FA>
+        void dump_finite_set(std::string& str) const
+        {
+            if constexpr (!std::is_same_v<FA, tavl::empty_node>)
+            {
+                dump_finite_set<typename FA::left>(str);
+                str += "{";
+                dump_set<typename FA::key>(str);
+                str += "} (";
+                dump_set_value<typename FA::value>(str);
+                str.pop_back();
+                str += ")\n";
+                dump_finite_set<typename FA::right>(str);
             }
         }
         class lookahead_guard
@@ -1005,6 +1036,8 @@ namespace Compiler
         {
             std::string output;
             dump<dfa>(output);
+            output += "\nFinite: \n";
+            dump_finite_set<finite_dfa>(output);
             return output;
         }
         std::istream& get_stream() override
@@ -1074,11 +1107,17 @@ namespace Compiler
         template <typename Marker, typename State>
         bool do_parse(std::string& str)
         {
+            using namespace std::string_literals;
             PRINT_LOG("lexer-parsing: " + str);
+            std::string log_str;
+            dump_set<State>(log_str);
             constexpr bool is_finite = tavl::tavl_contain_v<finite_dfa, State>;
+            PRINT_LOG("[finite: " + std::to_string(is_finite) + "]" +
+                      "state: "s + log_str);
             if constexpr (tavl::is_empty_node_v<State>)
             {
                 // invalid state
+                PRINT_LOG("state is empty");
                 return false;
             }
             else if constexpr (tavl::tavl_contain_v<dfa, State>)
@@ -1163,13 +1202,21 @@ namespace Compiler
         bool move_forward(std::string& str, char ch)
         {
             PRINT_LOG("lexer-move_forward: " + str + ch);
+            std::string log_str;
+            dump_label<Edges>(log_str);
+            PRINT_LOG("edge: \n" + log_str);
             if constexpr (tavl::is_empty_node_v<Edges>)
             {
                 // cannot accept ch from this state
+                std::string log_str;
+                dump_label<Edges>(log_str);
+                using namespace std::string_literals;
+                PRINT_LOG("cannot accept "s + ch + " from " + log_str);
                 return false;
             }
             else
             {
+                PRINT_LOG("move forward");
                 int comp_result = ch - Edges::key::value;
                 if (comp_result == 0)
                 {

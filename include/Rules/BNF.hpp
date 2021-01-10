@@ -23,6 +23,7 @@
 #include "Common/Tlist.hpp"
 #include "Common/Tstring.hpp"
 #include "TAVL.hpp"
+#include "rules_common.hpp"
 #include <type_traits>
 
 namespace Compiler
@@ -1105,20 +1106,6 @@ namespace Compiler
             typename remove_leading_space_and_comment<t_string<chs...>>::next;
 #undef def_one_or_two
 #undef def_single
-        struct optional_sequence_flag
-        {};
-        struct repeated_sequence_flag
-        {};
-        struct grouped_sequence_flag
-        {};
-        struct meta_identifier_flag
-        {};
-        struct terminal_string_flag
-        {};
-        struct special_sequence_flag
-        {};
-        struct empty_sequence_flag
-        {};
 #define start_def_end(name, ttype)                                             \
     template <char... chars>                                                   \
     struct name<t_string<chars...>>                                            \
@@ -1496,23 +1483,6 @@ namespace Compiler
         t_string<'\'', '"'>; // string that cannot disappear in normal
                              // terminal strings
     using lexer_rule_indicator = _TSTR("lexer");
-    template <char... chars>
-    constexpr std::true_type
-        start_with_lexer(t_string<'l', 'e', 'x', 'e', 'r', chars...>)
-    {
-        return {};
-    }
-    constexpr std::false_type start_with_lexer(...)
-    {
-        return {};
-    }
-    template <typename Definition>
-    inline constexpr bool is_lexer_rule = std::
-        is_same_v<typename type_list_top<Definition>::first_type, Impl::special_sequence_flag>&& decltype(
-            start_with_lexer(
-                std::declval<
-                    typename type_list_top<Definition>::second_type>()))::value;
-
 #define DECL_RULE_S(name, suffix, str) \
     static constexpr const char name##suffix[] = str
 #define DECL_RULE(name, str) DECL_RULE_S(name, _rule, str)

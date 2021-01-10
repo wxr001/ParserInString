@@ -76,4 +76,8 @@ R"({0}
 		{2 3 4 [6]}
 {5}
 	f
-		{2 3 [6]})"
+		{2 3 [6]}
+
+Finite: 
+{2 3 4 [6] } (lexer regex test)
+{2 3 [6] } (lexer regex test))"

@@ -367,7 +367,7 @@ TEST_SUITE("Lexer")
             std::cin, Compiler::parser_dummy, dummy_listeners}
                                    .dump());
         constexpr auto tstr_dump_result =
-            R"({0 1 3 7 11}
+            R"EOF({0 1 3 7 11}
 	a
 		{[2] 4 8}
 	b
@@ -379,7 +379,13 @@ TEST_SUITE("Lexer")
 	c
 		{[6]}
 	d
-		{[10]})";
+		{[10]}
+
+Finite: 
+{[2] 4 8 } (a)
+{[6] } (abc)
+{[10] } (abd)
+{[12] } (b))EOF";
         CHECK_EQ(tstr_dump, tstr_dump_result);
     }
     TEST_CASE("identifier")
@@ -406,7 +412,11 @@ TEST_SUITE("Lexer")
 		{3 7}
 {3 7}
 	c
-		{[4] 8})";
+		{[4] 8 [9]}
+
+Finite: 
+{0 1 5 [9] } (lexer test)
+{[4] 8 [9] } (abc|lexer test))";
         CHECK_EQ(optional_dump, optional_result);
     }
     TEST_CASE("Terminal & Nonterminal")
@@ -509,6 +519,7 @@ TEST_SUITE("Lexer")
         std::stringstream       ss_input{test_input};
         Compiler::test_optional test_lexer{
             ss_input, Compiler::parser_dummy, dummy_listeners};
+        std::cout << test_lexer.dump() << std::endl;
         CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
                                                         '\"',
                                                         'l',
