@@ -51,3 +51,4 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION include/ParserInStri
 
 target_include_directories(test PRIVATE lib/doctest/doctest)
 target_link_libraries(test PUBLIC PIS)
+target_include_directories(test PRIVATE PIS)
