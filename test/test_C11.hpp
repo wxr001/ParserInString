@@ -19,12 +19,12 @@
 #ifndef PARSER_IN_STRING_TEST_C11
 #define PARSER_IN_STRING_TEST_C11
 
-#include "Common/Tstring.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include "TAVL.hpp"
 #include <type_traits>
-namespace Compiler
+namespace pis
 {
     DECL_RULE(identifier, R"(
     identifier =

@@ -19,22 +19,22 @@
 #ifndef PARSER_IN_STRING_TESTLL
 #define PARSER_IN_STRING_TESTLL
 
-#include "Common/Identity.hpp"
-#include "Common/TAVLHelper.hpp"
-#include "Common/Tfuncs.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Common/Utils.hpp"
-#include "Matcher/LL.hpp"
-#include "Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/TAVLHelper.hpp"
+#include "pis/Common/Tfuncs.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Common/Utils.hpp"
+#include "pis/Matcher/LL.hpp"
+#include "pis/Rules/CodeToRules.hpp"
 #include "test_common.hpp"
 #include <any>
 #include <doctest.h>
 #include <sstream>
 #include <string>
 #include <type_traits>
-static constexpr const char single_rule[] = R"(abc = "abc", "def";)";
+
 static constexpr const char example_rules[] =
     R"(S = 'a', A, 'a', 'a' | 'b', A, 'b', 'a'; A = 'b' | ;)";
 static constexpr const char calculator_no_left_recursion[] = R"(
@@ -50,7 +50,7 @@ Const = ?lexer i?, {?number?} |
         '(', Expr, ')';
 )";
 
-namespace Compiler
+namespace pis
 {
     namespace LLTesting
     {
@@ -68,15 +68,15 @@ namespace Compiler
         // typename test_calculator::parsing_table i = 0;
     } // namespace LLTesting
 
-} // namespace Compiler
+} // namespace pis
 TEST_SUITE("LL(k)")
 {
-    using namespace Compiler;
+    using namespace pis;
     TEST_CASE("k=2, r1")
     {
-        std::string                                        test_input = "abaa";
-        std::stringstream                                  ss_input{test_input};
-        typename Compiler::LLTesting::test_example_rules_2 parser;
+        std::string                                   test_input = "abaa";
+        std::stringstream                             ss_input{test_input};
+        typename pis::LLTesting::test_example_rules_2 parser;
         auto           parse_result  = parser.parse(ss_input);
         constexpr auto expect_result = R"([a, 
 [b], 
@@ -86,9 +86,9 @@ a])";
     }
     TEST_CASE("k=2, r2e")
     {
-        std::string                                        test_input = "bba";
-        std::stringstream                                  ss_input{test_input};
-        typename Compiler::LLTesting::test_example_rules_2 parser;
+        std::string                                   test_input = "bba";
+        std::stringstream                             ss_input{test_input};
+        typename pis::LLTesting::test_example_rules_2 parser;
         auto           parse_result  = parser.parse(ss_input);
         constexpr auto expect_result = R"([b, 
 [], 
@@ -98,9 +98,9 @@ a])";
     }
     TEST_CASE("k=2, r2")
     {
-        std::string                                        test_input = "bbba";
-        std::stringstream                                  ss_input{test_input};
-        typename Compiler::LLTesting::test_example_rules_2 parser;
+        std::string                                   test_input = "bbba";
+        std::stringstream                             ss_input{test_input};
+        typename pis::LLTesting::test_example_rules_2 parser;
         auto           parse_result  = parser.parse(ss_input);
         constexpr auto expect_result = R"([b, 
 [b], 
@@ -110,9 +110,9 @@ a])";
     }
     TEST_CASE("k=2 r1e")
     {
-        std::string                                        test_input = "aaa";
-        std::stringstream                                  ss_input{test_input};
-        typename Compiler::LLTesting::test_example_rules_2 parser;
+        std::string                                   test_input = "aaa";
+        std::stringstream                             ss_input{test_input};
+        typename pis::LLTesting::test_example_rules_2 parser;
         auto           parse_result  = parser.parse(ss_input);
         constexpr auto expect_result = R"([a, 
 [], 
@@ -122,9 +122,9 @@ a])";
     }
     TEST_CASE("calculator")
     {
-        std::string       test_input = "1+2-3*4/5+(6)";
-        std::stringstream ss_input{test_input};
-        typename Compiler::LLTesting::test_calculator parser;
+        std::string                              test_input = "1+2-3*4/5+(6)";
+        std::stringstream                        ss_input{test_input};
+        typename pis::LLTesting::test_calculator parser;
 
         auto           parse_result  = parser.parse(ss_input);
         constexpr auto expect_result = R"([[[1], 
@@ -251,9 +251,9 @@ a])";
             }
             return std::make_any<int>(val);
         };
-        std::string       test_input = "1+2-3*4/5+(6)";
-        std::stringstream ss_input{test_input};
-        typename Compiler::LLTesting::test_calculator parser;
+        std::string                              test_input = "1+2-3*4/5+(6)";
+        std::stringstream                        ss_input{test_input};
+        typename pis::LLTesting::test_calculator parser;
         parser.add_parser_listener("Const", const_listener);
         parser.add_parser_listener("Multi", multi_listener);
         parser.add_parser_listener("Expr", expr_listener);

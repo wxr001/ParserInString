@@ -1,6 +1,6 @@
 // ParserInString -*- C++ -*-
 
-// Copyright (C) 2020  Scott Brown
+// Copyright (C) 2018  Scott Brown
 
 // This file is part of the UCL library.
 // This library is free software: you can redistribute it and/or modify
@@ -16,30 +16,34 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef PARSER_IN_STRING_TEST_C11LL
-#define PARSER_IN_STRING_TEST_C11LL
-
-#include "pis/Common/Tstring.hpp"
-#include "pis/Lexer/Lexer.hpp"
-#include "pis/Matcher/LL.hpp"
-#include "pis/Rules/CodeToRules.hpp"
-#include "pis/Rules/EBNF.hpp"
-#include "TAVL.hpp"
-#include <doctest.h>
-#include <type_traits>
-#ifdef C11
-#    include "test_C11_rule.hpp"
+#ifndef PARSER_IN_STRING_COMMON_IDENTITY
+#define PARSER_IN_STRING_COMMON_IDENTITY
+#if __cpp_lib_type_identity >= 201806L and __has_include(<type_identity>)
+#    include <type_identity>
 #endif
 namespace pis
 {
-#ifndef C11
-    using c11 = void;
+#if __cpp_lib_type_identity >= 201806L
+    template <typename T>
+    using identity = std::type_identity<T>;
+#else
+    template <typename T>
+    struct identity
+    {
+        using type = T;
+    };
 #endif
-    using c11_ll = ll_parsing<c11, _TSTR("translation unit"), 1>;
+    // codes originally from
+    // https://musteresel.github.io/posts/2018/03/c++-lazy-template-instantiation.html
+    template <template <class...> class T, typename... Args>
+    struct lazy_template
+    {
+        using type = T<Args...>;
+    };
+    template <typename T>
+    struct empty_base: private T
+    {
+        using T::T;
+    };
 } // namespace pis
-TEST_CASE("ll(1)")
-{
-    Compiler::c11_ll parser;
-    parser.dump();
-}
 #endif

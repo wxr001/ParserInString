@@ -19,10 +19,10 @@
 #ifndef PARSER_IN_STRING_TEST
 #define PARSER_IN_STRING_TEST
 
-#include "Common/Tstring.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Rules/CodeToRules.hpp"
 #include "test_common.hpp"
 namespace Compiler
 {} // namespace Compiler

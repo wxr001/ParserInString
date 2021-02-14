@@ -19,8 +19,8 @@
 #ifndef PARSER_IN_STRING_MATCHER_TESTFIRSTSET
 #define PARSER_IN_STRING_MATCHER_TESTFIRSTSET
 
-#include "Matcher/FirstFollow.hpp"
-#include "Rules/CodeToRules.hpp"
+#include "pis/Matcher/FirstFollow.hpp"
+#include "pis/Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
 
 static constexpr const char empty_rules[] = " ";

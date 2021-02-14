@@ -19,16 +19,16 @@
 #ifndef PARSER_IN_STRING_MATCHER_COMPILER
 #define PARSER_IN_STRING_MATCHER_COMPILER
 
-#include "Common/Identity.hpp"
-#include "Common/TAVLHelper.hpp"
-#include "Common/Tfuncs.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Common/Utils.hpp"
-#include "Matcher/FirstFollow.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/TAVLHelper.hpp"
+#include "pis/Common/Tfuncs.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Common/Utils.hpp"
+#include "pis/Matcher/FirstFollow.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include <type_traits>
 #define CONCAT_IMPL(a, b)   #a #b
 #define CONCAT(a, b)        CONCAT_IMPL(a, b)
@@ -360,7 +360,7 @@ DEF(__COUNTER__);
 DEF(__COUNTER__);
 DEF(__COUNTER__);
 DEF(__COUNTER__);
-namespace Compiler
+namespace pis
 {
     // clang-format off
     using type = code_to_rules_t<long_rules,
@@ -398,6 +398,6 @@ namespace Compiler
     	r310, r311, r312, r313, r314, r315, r316, r317, r318, r319>;
     // clang-format on
     static_assert(!std::is_same_v<type, tavl::empty_node>);
-} // namespace Compiler
+} // namespace pis
 
 #endif

@@ -19,17 +19,17 @@
 #ifndef PARSER_IN_STRING_TESTLR0
 #define PARSER_IN_STRING_TESTLR0
 
-#include "Common/Identity.hpp"
-#include "Common/TAVLHelper.hpp"
-#include "Common/Tfuncs.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Common/Utils.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Matcher/LR0.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/TAVLHelper.hpp"
+#include "pis/Common/Tfuncs.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Common/Utils.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Matcher/LR0.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include "test_common.hpp"
 #include <doctest.h>
 #include <iostream>
@@ -39,17 +39,17 @@ E = E, '-', T |
     T;
 T = ?lexer i?, {?number?} |
     '(', E, ')';)");
-namespace Compiler
+namespace pis
 {
     namespace LR0_TESTING
     {
         using calculator_test =
             lr_parsing<code_to_rules_t<calculator_rule>, t_string<'E'>, 0>;
     }
-} // namespace Compiler
+} // namespace pis
 TEST_SUITE("LR(0)")
 {
-    using namespace Compiler;
+    using namespace pis;
     TEST_CASE("calculator")
     {
         typename LR0_TESTING::calculator_test calc;

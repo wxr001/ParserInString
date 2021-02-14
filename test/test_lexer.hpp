@@ -19,16 +19,16 @@
 #ifndef PARSER_IN_STRING_TEST_TESTLEXER
 #define PARSER_IN_STRING_TEST_TESTLEXER
 
-#include "Common/Identity.hpp"
-#include "Common/TAVLHelper.hpp"
-#include "Common/Tfuncs.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Common/Utils.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/TAVLHelper.hpp"
+#include "pis/Common/Tfuncs.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Common/Utils.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include "test_common.hpp"
 #include <any>
 #include <doctest.h>
@@ -47,18 +47,18 @@ using identifier_rule_result =
                     tavl::empty_node,
                     0,
                     std::integer_sequence<char, 'A'>,
-                    Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                        Compiler::Impl::terminal_string_flag,
-                        std::integer_sequence<char,
-                                              '\'',
-                                              '\"',
-                                              'l',
-                                              'e',
-                                              'x',
-                                              'e',
-                                              'r',
-                                              ' ',
-                                              'a'>>>>>;
+                    pis::type_list<pis::type_list<
+                        pis::type_pair<pis::Impl::terminal_string_flag,
+                                       std::integer_sequence<char,
+                                                             '\'',
+                                                             '\"',
+                                                             'l',
+                                                             'e',
+                                                             'x',
+                                                             'e',
+                                                             'r',
+                                                             ' ',
+                                                             'a'>>>>>;
 DECL_RULE(optional, R"(
 A = ?normal special?;
 B = "abc" | ?lexer test?, ["abc"];
@@ -70,66 +70,66 @@ using optional_rule_result = tavl::tavl_node<
         tavl::empty_node,
         0,
         std::integer_sequence<char, 'B'>,
-        Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                                Compiler::Impl::terminal_string_flag,
-                                std::integer_sequence<char, 'a', 'b', 'c'>>>,
-                            Compiler::type_list<Compiler::type_pair<
-                                Compiler::Impl::terminal_string_flag,
-                                std::integer_sequence<char,
-                                                      '\'',
-                                                      '\"',
-                                                      'l',
-                                                      'e',
-                                                      'x',
-                                                      'e',
-                                                      'r',
-                                                      ' ',
-                                                      't',
-                                                      'e',
-                                                      's',
-                                                      't'>>>>>,
+        pis::type_list<
+            pis::type_list<
+                pis::type_pair<pis::Impl::terminal_string_flag,
+                               std::integer_sequence<char, 'a', 'b', 'c'>>>,
+            pis::type_list<pis::type_pair<pis::Impl::terminal_string_flag,
+                                          std::integer_sequence<char,
+                                                                '\'',
+                                                                '\"',
+                                                                'l',
+                                                                'e',
+                                                                'x',
+                                                                'e',
+                                                                'r',
+                                                                ' ',
+                                                                't',
+                                                                'e',
+                                                                's',
+                                                                't'>>>>>,
     1,
     std::integer_sequence<char, 'A'>,
-    Compiler::type_list<Compiler::type_list<
-        Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                            std::integer_sequence<char,
-                                                  '\'',
-                                                  '\"',
-                                                  'n',
-                                                  'o',
-                                                  'r',
-                                                  'm',
-                                                  'a',
-                                                  'l',
-                                                  ' ',
-                                                  's',
-                                                  'p',
-                                                  'e',
-                                                  'c',
-                                                  'i',
-                                                  'a',
-                                                  'l'>>>>>;
+    pis::type_list<
+        pis::type_list<pis::type_pair<pis::Impl::terminal_string_flag,
+                                      std::integer_sequence<char,
+                                                            '\'',
+                                                            '\"',
+                                                            'n',
+                                                            'o',
+                                                            'r',
+                                                            'm',
+                                                            'a',
+                                                            'l',
+                                                            ' ',
+                                                            's',
+                                                            'p',
+                                                            'e',
+                                                            'c',
+                                                            'i',
+                                                            'a',
+                                                            'l'>>>>>;
 DECL_RULE(term_non, R"(A = "abc" | ?lexer a?, {?alpha?};)");
 using term_non_result = tavl::tavl_node<
     tavl::empty_node,
     tavl::empty_node,
     0,
     std::integer_sequence<char, 'A'>,
-    Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                            Compiler::Impl::terminal_string_flag,
-                            std::integer_sequence<char, 'a', 'b', 'c'>>>,
-                        Compiler::type_list<Compiler::type_pair<
-                            Compiler::Impl::terminal_string_flag,
-                            std::integer_sequence<char,
-                                                  '\'',
-                                                  '\"',
-                                                  'l',
-                                                  'e',
-                                                  'x',
-                                                  'e',
-                                                  'r',
-                                                  ' ',
-                                                  'a'>>>>>;
+    pis::type_list<
+        pis::type_list<
+            pis::type_pair<pis::Impl::terminal_string_flag,
+                           std::integer_sequence<char, 'a', 'b', 'c'>>>,
+        pis::type_list<pis::type_pair<pis::Impl::terminal_string_flag,
+                                      std::integer_sequence<char,
+                                                            '\'',
+                                                            '\"',
+                                                            'l',
+                                                            'e',
+                                                            'x',
+                                                            'e',
+                                                            'r',
+                                                            ' ',
+                                                            'a'>>>>>;
 DECL_RULE(number, R"(
 Expr = Multi, Expr1;
 Expr1 = '+', Multi, Expr1 |
@@ -148,143 +148,137 @@ using number_result = tavl::tavl_node<
         tavl::empty_node,
         0,
         std::integer_sequence<char, 'C', 'o', 'n', 's', 't'>,
-        Compiler::type_list<
-            Compiler::type_list<Compiler::type_pair<
-                Compiler::Impl::terminal_string_flag,
-                std::integer_sequence<char,
-                                      '\'',
-                                      '\"',
-                                      'l',
-                                      'e',
-                                      'x',
-                                      'e',
-                                      'r',
-                                      ' ',
-                                      'i'>>>,
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                                    std::integer_sequence<char, '('>>,
-                Compiler::type_pair<
-                    Compiler::Impl::meta_identifier_flag,
-                    std::integer_sequence<char, 'E', 'x', 'p', 'r'>>,
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                                    std::integer_sequence<char, ')'>>>>>,
+        pis::type_list<
+            pis::type_list<pis::type_pair<pis::Impl::terminal_string_flag,
+                                          std::integer_sequence<char,
+                                                                '\'',
+                                                                '\"',
+                                                                'l',
+                                                                'e',
+                                                                'x',
+                                                                'e',
+                                                                'r',
+                                                                ' ',
+                                                                'i'>>>,
+            pis::type_list<
+                pis::type_pair<pis::Impl::terminal_string_flag,
+                               std::integer_sequence<char, '('>>,
+                pis::type_pair<pis::Impl::meta_identifier_flag,
+                               std::integer_sequence<char, 'E', 'x', 'p', 'r'>>,
+                pis::type_pair<pis::Impl::terminal_string_flag,
+                               std::integer_sequence<char, ')'>>>>>,
     tavl::tavl_node<
         tavl::tavl_node<
             tavl::empty_node,
             tavl::empty_node,
             0,
             std::integer_sequence<char, 'E', 'x', 'p', 'r', '1'>,
-            Compiler::type_list<
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                                        std::integer_sequence<char, '+'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::meta_identifier_flag,
+            pis::type_list<
+                pis::type_list<
+                    pis::type_pair<pis::Impl::terminal_string_flag,
+                                   std::integer_sequence<char, '+'>>,
+                    pis::type_pair<
+                        pis::Impl::meta_identifier_flag,
                         std::integer_sequence<char, 'M', 'u', 'l', 't', 'i'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::meta_identifier_flag,
+                    pis::type_pair<
+                        pis::Impl::meta_identifier_flag,
                         std::integer_sequence<char, 'E', 'x', 'p', 'r', '1'>>>,
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                                        std::integer_sequence<char, '-'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::meta_identifier_flag,
+                pis::type_list<
+                    pis::type_pair<pis::Impl::terminal_string_flag,
+                                   std::integer_sequence<char, '-'>>,
+                    pis::type_pair<
+                        pis::Impl::meta_identifier_flag,
                         std::integer_sequence<char, 'M', 'u', 'l', 't', 'i'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::meta_identifier_flag,
+                    pis::type_pair<
+                        pis::Impl::meta_identifier_flag,
                         std::integer_sequence<char, 'E', 'x', 'p', 'r', '1'>>>,
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::empty_sequence_flag,
-                                        std::integer_sequence<char>>>>>,
+                pis::type_list<pis::type_pair<pis::Impl::empty_sequence_flag,
+                                              std::integer_sequence<char>>>>>,
         tavl::tavl_node<
             tavl::empty_node,
             tavl::empty_node,
             0,
             std::integer_sequence<char, 'M', 'u', 'l', 't', 'i', '1'>,
-            Compiler::type_list<
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                                        std::integer_sequence<char, '*'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::meta_identifier_flag,
+            pis::type_list<
+                pis::type_list<
+                    pis::type_pair<pis::Impl::terminal_string_flag,
+                                   std::integer_sequence<char, '*'>>,
+                    pis::type_pair<
+                        pis::Impl::meta_identifier_flag,
                         std::integer_sequence<char, 'C', 'o', 'n', 's', 't'>>,
-                    Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
-                                        std::integer_sequence<char,
-                                                              'M',
-                                                              'u',
-                                                              'l',
-                                                              't',
-                                                              'i',
-                                                              '1'>>>,
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                                        std::integer_sequence<char, '/'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::meta_identifier_flag,
+                    pis::type_pair<pis::Impl::meta_identifier_flag,
+                                   std::integer_sequence<char,
+                                                         'M',
+                                                         'u',
+                                                         'l',
+                                                         't',
+                                                         'i',
+                                                         '1'>>>,
+                pis::type_list<
+                    pis::type_pair<pis::Impl::terminal_string_flag,
+                                   std::integer_sequence<char, '/'>>,
+                    pis::type_pair<
+                        pis::Impl::meta_identifier_flag,
                         std::integer_sequence<char, 'C', 'o', 'n', 's', 't'>>,
-                    Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
-                                        std::integer_sequence<char,
-                                                              'M',
-                                                              'u',
-                                                              'l',
-                                                              't',
-                                                              'i',
-                                                              '1'>>>,
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::empty_sequence_flag,
-                                        std::integer_sequence<char>>>>>,
+                    pis::type_pair<pis::Impl::meta_identifier_flag,
+                                   std::integer_sequence<char,
+                                                         'M',
+                                                         'u',
+                                                         'l',
+                                                         't',
+                                                         'i',
+                                                         '1'>>>,
+                pis::type_list<pis::type_pair<pis::Impl::empty_sequence_flag,
+                                              std::integer_sequence<char>>>>>,
         1,
         std::integer_sequence<char, 'M', 'u', 'l', 't', 'i'>,
-        Compiler::type_list<Compiler::type_list<
-            Compiler::type_pair<
-                Compiler::Impl::meta_identifier_flag,
+        pis::type_list<pis::type_list<
+            pis::type_pair<
+                pis::Impl::meta_identifier_flag,
                 std::integer_sequence<char, 'C', 'o', 'n', 's', 't'>>,
-            Compiler::type_pair<
-                Compiler::Impl::meta_identifier_flag,
+            pis::type_pair<
+                pis::Impl::meta_identifier_flag,
                 std::integer_sequence<char, 'M', 'u', 'l', 't', 'i', '1'>>>>>,
     2,
     std::integer_sequence<char, 'E', 'x', 'p', 'r'>,
-    Compiler::type_list<Compiler::type_list<
-        Compiler::type_pair<
-            Compiler::Impl::meta_identifier_flag,
-            std::integer_sequence<char, 'M', 'u', 'l', 't', 'i'>>,
-        Compiler::type_pair<
-            Compiler::Impl::meta_identifier_flag,
-            std::integer_sequence<char, 'E', 'x', 'p', 'r', '1'>>>>>;
+    pis::type_list<pis::type_list<
+        pis::type_pair<pis::Impl::meta_identifier_flag,
+                       std::integer_sequence<char, 'M', 'u', 'l', 't', 'i'>>,
+        pis::type_pair<pis::Impl::meta_identifier_flag,
+                       std::integer_sequence<char, 'E', 'x', 'p', 'r', '1'>>>>>;
 DECL_RULE(special_sequence, R"(A = ?special 1?, ?special 2?;)");
-using special_sequence_result = tavl::tavl_node<
-    tavl::empty_node,
-    tavl::empty_node,
-    0,
-    std::integer_sequence<char, 'A'>,
-    Compiler::type_list<Compiler::type_list<
-        Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                            std::integer_sequence<char,
-                                                  '\'',
-                                                  '\"',
-                                                  's',
-                                                  'p',
-                                                  'e',
-                                                  'c',
-                                                  'i',
-                                                  'a',
-                                                  'l',
-                                                  ' ',
-                                                  '1'>>,
-        Compiler::type_pair<Compiler::Impl::terminal_string_flag,
-                            std::integer_sequence<char,
-                                                  '\'',
-                                                  '\"',
-                                                  's',
-                                                  'p',
-                                                  'e',
-                                                  'c',
-                                                  'i',
-                                                  'a',
-                                                  'l',
-                                                  ' ',
-                                                  '2'>>>>>;
+using special_sequence_result =
+    tavl::tavl_node<tavl::empty_node,
+                    tavl::empty_node,
+                    0,
+                    std::integer_sequence<char, 'A'>,
+                    pis::type_list<pis::type_list<
+                        pis::type_pair<pis::Impl::terminal_string_flag,
+                                       std::integer_sequence<char,
+                                                             '\'',
+                                                             '\"',
+                                                             's',
+                                                             'p',
+                                                             'e',
+                                                             'c',
+                                                             'i',
+                                                             'a',
+                                                             'l',
+                                                             ' ',
+                                                             '1'>>,
+                        pis::type_pair<pis::Impl::terminal_string_flag,
+                                       std::integer_sequence<char,
+                                                             '\'',
+                                                             '\"',
+                                                             's',
+                                                             'p',
+                                                             'e',
+                                                             'c',
+                                                             'i',
+                                                             'a',
+                                                             'l',
+                                                             ' ',
+                                                             '2'>>>>>;
 DECL_RULE(regex, R"(
 A = ?lexer regex test?, ?@ab[cd1-9\]]*(\def)*?;)");
 using regex_result =
@@ -292,28 +286,28 @@ using regex_result =
                     tavl::empty_node,
                     0,
                     std::integer_sequence<char, 'A'>,
-                    Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                        Compiler::Impl::terminal_string_flag,
-                        std::integer_sequence<char,
-                                              '\'',
-                                              '\"',
-                                              'l',
-                                              'e',
-                                              'x',
-                                              'e',
-                                              'r',
-                                              ' ',
-                                              'r',
-                                              'e',
-                                              'g',
-                                              'e',
-                                              'x',
-                                              ' ',
-                                              't',
-                                              'e',
-                                              's',
-                                              't'>>>>>;
-namespace Compiler
+                    pis::type_list<pis::type_list<
+                        pis::type_pair<pis::Impl::terminal_string_flag,
+                                       std::integer_sequence<char,
+                                                             '\'',
+                                                             '\"',
+                                                             'l',
+                                                             'e',
+                                                             'x',
+                                                             'e',
+                                                             'r',
+                                                             ' ',
+                                                             'r',
+                                                             'e',
+                                                             'g',
+                                                             'e',
+                                                             'x',
+                                                             ' ',
+                                                             't',
+                                                             'e',
+                                                             's',
+                                                             't'>>>>>;
+namespace pis
 {
     using test_no_lexer = lexer<code_to_rules_t<no_lexer_rule>>;
     static_assert(tavl::is_empty_node_v<typename test_no_lexer::dfa>);
@@ -349,23 +343,22 @@ namespace Compiler
         static std::vector<std::any> dummy;
         return dummy;
     }
-} // namespace Compiler
+} // namespace pis
 TEST_SUITE("Lexer")
 {
-    std::unordered_map<std::string, Compiler::lexer_listener_t> dummy_listeners;
+    std::unordered_map<std::string, pis::lexer_listener_t> dummy_listeners;
     TEST_CASE("number")
     {
-        std::cout
-            << rtrim(Compiler::lexer<Compiler::code_to_rules_t<number_rule>>{
-                   std::cin, Compiler::parser_dummy, dummy_listeners}
-                         .dump())
-            << std::endl;
+        std::cout << rtrim(pis::lexer<pis::code_to_rules_t<number_rule>>{
+                         std::cin, pis::parser_dummy, dummy_listeners}
+                               .dump())
+                  << std::endl;
     }
     TEST_CASE("tstr_only")
     {
-        auto           tstr_dump = rtrim(Compiler::test_tstr_only{
-            std::cin, Compiler::parser_dummy, dummy_listeners}
-                                   .dump());
+        auto tstr_dump = rtrim(
+            pis::test_tstr_only{std::cin, pis::parser_dummy, dummy_listeners}
+                .dump());
         constexpr auto tstr_dump_result =
             R"EOF({0 1 3 7 11}
 	a
@@ -390,9 +383,9 @@ Finite:
     }
     TEST_CASE("identifier")
     {
-        auto           identifier_dump = rtrim(Compiler::test_identifier{
-            std::cin, Compiler::parser_dummy, dummy_listeners}
-                                         .dump());
+        auto identifier_dump = rtrim(
+            pis::test_identifier{std::cin, pis::parser_dummy, dummy_listeners}
+                .dump());
         constexpr auto identifier_result =
 #include "test_lexer_identifier.str"
             ;
@@ -400,9 +393,9 @@ Finite:
     }
     TEST_CASE("optional")
     {
-        auto              optional_dump = rtrim(Compiler::test_optional{
-            std::cin, Compiler::parser_dummy, dummy_listeners}
-                                       .dump());
+        auto optional_dump = rtrim(
+            pis::test_optional{std::cin, pis::parser_dummy, dummy_listeners}
+                .dump());
         const std::string optional_result =
             R"({0 1 5 [9]}
 	a
@@ -421,9 +414,9 @@ Finite:
     }
     TEST_CASE("Terminal & Nonterminal")
     {
-        auto              term_nont_dump = rtrim(Compiler::test_term_nont{
-            std::cin, Compiler::parser_dummy, dummy_listeners}
-                                        .dump());
+        auto term_nont_dump = rtrim(
+            pis::test_term_nont{std::cin, pis::parser_dummy, dummy_listeners}
+                .dump());
         const std::string term_nont_result =
 #include "test_lexer_term_nont_str.str"
             ;
@@ -431,140 +424,132 @@ Finite:
     }
     TEST_CASE("readNext")
     {
-        std::string              test_input = "aabdabcb";
-        std::stringstream        ss_input{test_input};
-        Compiler::test_tstr_only test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a'>>(), "a");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'd'>>(),
-                 "abd");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'c'>>(),
-                 "abc");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'b'>>(), "b");
+        std::string         test_input = "aabdabcb";
+        std::stringstream   ss_input{test_input};
+        pis::test_tstr_only test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a'>>(), "a");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'd'>>(), "abd");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'c'>>(), "abc");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'b'>>(), "b");
     }
     TEST_CASE("read fail in the middle")
     {
-        std::string              test_input = "aaba";
-        std::stringstream        ss_input{test_input};
-        Compiler::test_tstr_only test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a'>>(), "a");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'd'>>(), "");
+        std::string         test_input = "aaba";
+        std::stringstream   ss_input{test_input};
+        pis::test_tstr_only test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a'>>(), "a");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'd'>>(), "");
     }
     TEST_CASE("readNext: marker not exist")
     {
-        std::string              test_input = "aaba";
-        std::stringstream        ss_input{test_input};
-        Compiler::test_tstr_only test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'c'>>(), "");
+        std::string         test_input = "aaba";
+        std::stringstream   ss_input{test_input};
+        pis::test_tstr_only test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'c'>>(), "");
     }
     TEST_CASE("readNext: read EOF")
     {
-        std::string              test_input = "aab";
-        std::stringstream        ss_input{test_input};
-        Compiler::test_tstr_only test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a'>>(), "a");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'd'>>(), "");
+        std::string         test_input = "aab";
+        std::stringstream   ss_input{test_input};
+        pis::test_tstr_only test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a'>>(), "a");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'd'>>(), "");
     }
     TEST_CASE("readNext: lexer rule")
     {
-        std::string               test_input = "aab.";
-        std::stringstream         ss_input{test_input};
-        Compiler::test_identifier test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
+        std::string          test_input = "aab.";
+        std::stringstream    ss_input{test_input};
+        pis::test_identifier test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
         CHECK_EQ(
             test_lexer.readNext<
-                Compiler::
-                    t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'a'>>(),
+                pis::t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'a'>>(),
             "aab");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'd'>>(), "");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'd'>>(), "");
     }
     TEST_CASE("readNext: lexer rule not exist")
     {
-        std::string               test_input = "aab.";
-        std::stringstream         ss_input{test_input};
-        Compiler::test_identifier test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
+        std::string          test_input = "aab.";
+        std::stringstream    ss_input{test_input};
+        pis::test_identifier test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
         CHECK_EQ(
             test_lexer.readNext<
-                Compiler::
-                    t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'v'>>(),
+                pis::t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'v'>>(),
             "");
     }
     TEST_CASE("readNext: empty input")
     {
-        std::string             test_input = "";
-        std::stringstream       ss_input{test_input};
-        Compiler::test_optional test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        std::string        test_input = "";
+        std::stringstream  ss_input{test_input};
+        pis::test_optional test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "");
     }
     TEST_CASE("readNext: optional")
     {
-        std::string             test_input = "abcabc";
-        std::stringstream       ss_input{test_input};
-        Compiler::test_optional test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
+        std::string        test_input = "abcabc";
+        std::stringstream  ss_input{test_input};
+        pis::test_optional test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
         std::cout << test_lexer.dump() << std::endl;
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "abc");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'c'>>(),
-                 "abc");
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'c'>>(), "abc");
     }
     TEST_CASE("readNext: Terminal & Nonterminal")
     {
-        std::string              test_input = "abc abcd";
-        std::stringstream        ss_input{test_input};
-        Compiler::test_term_nont test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'c'>>(),
-                 "abc");
+        std::string         test_input = "abc abcd";
+        std::stringstream   ss_input{test_input};
+        pis::test_term_nont test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'c'>>(), "abc");
         CHECK_EQ(
             test_lexer.readNext<
-                Compiler::
-                    t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'a'>>(),
+                pis::t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'a'>>(),
             "abcd");
-        std::string              test_input_f = "abcd";
-        std::stringstream        ss_input_f{test_input_f};
-        Compiler::test_term_nont test_lexer_f{
-            ss_input_f, Compiler::parser_dummy, dummy_listeners};
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'a', 'b', 'c'>>(), "");
+        std::string         test_input_f = "abcd";
+        std::stringstream   ss_input_f{test_input_f};
+        pis::test_term_nont test_lexer_f{
+            ss_input_f, pis::parser_dummy, dummy_listeners};
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'a', 'b', 'c'>>(), "");
     }
     TEST_CASE("Bug: missing empty_trans when starting repeated sequence")
     {
-        std::string           test_input = "12+2";
-        std::stringstream     ss_input{test_input};
-        Compiler::test_number test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
+        std::string       test_input = "12+2";
+        std::stringstream ss_input{test_input};
+        pis::test_number  test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
         CHECK_EQ(
             test_lexer.readNext<
-                Compiler::
-                    t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'i'>>(),
+                pis::t_string<'\'', '\"', 'l', 'e', 'x', 'e', 'r', ' ', 'i'>>(),
             "12");
     }
     TEST_CASE("special sequence")
@@ -576,73 +561,73 @@ Finite:
         };
         std::string       test_input = "test input";
         std::stringstream ss_input{test_input};
-        std::unordered_map<std::string, Compiler::lexer_listener_t> listeners;
-        Compiler::test_special test_lexer{ss_input, parser_dummy, listeners};
+        std::unordered_map<std::string, pis::lexer_listener_t> listeners;
+        pis::test_special test_lexer{ss_input, parser_dummy, listeners};
         listeners.emplace("special 1"s,
-                          [&](std::vector<std::any>&     tokens,
-                              Compiler::lexer_interface& lexer,
-                              const std::string&         target) {
+                          [&](std::vector<std::any>& tokens,
+                              pis::lexer_interface&  lexer,
+                              const std::string&     target) {
                               CHECK_EQ(target, "special 1");
                               CHECK(tokens.empty());
                               CHECK_EQ(&lexer, &test_lexer);
                               return "1"s;
                           });
         listeners.emplace("special 2",
-                          [&](std::vector<std::any>&     tokens,
-                              Compiler::lexer_interface& lexer,
-                              const std::string&         target) {
+                          [&](std::vector<std::any>& tokens,
+                              pis::lexer_interface&  lexer,
+                              const std::string&     target) {
                               CHECK_EQ(target, "special 2");
                               CHECK(tokens.empty());
                               CHECK_EQ(&lexer, &test_lexer);
                               return "2"s;
                           });
-        CHECK_EQ(test_lexer.template readNext<Compiler::t_string<'\'',
-                                                                 '\"',
-                                                                 's',
-                                                                 'p',
-                                                                 'e',
-                                                                 'c',
-                                                                 'i',
-                                                                 'a',
-                                                                 'l',
-                                                                 ' ',
-                                                                 '1'>>(),
+        CHECK_EQ(test_lexer.template readNext<pis::t_string<'\'',
+                                                            '\"',
+                                                            's',
+                                                            'p',
+                                                            'e',
+                                                            'c',
+                                                            'i',
+                                                            'a',
+                                                            'l',
+                                                            ' ',
+                                                            '1'>>(),
                  "1");
-        CHECK_EQ(test_lexer.template readNext<Compiler::t_string<'\'',
-                                                                 '\"',
-                                                                 's',
-                                                                 'p',
-                                                                 'e',
-                                                                 'c',
-                                                                 'i',
-                                                                 'a',
-                                                                 'l',
-                                                                 ' ',
-                                                                 '2'>>(),
+        CHECK_EQ(test_lexer.template readNext<pis::t_string<'\'',
+                                                            '\"',
+                                                            's',
+                                                            'p',
+                                                            'e',
+                                                            'c',
+                                                            'i',
+                                                            'a',
+                                                            'l',
+                                                            ' ',
+                                                            '2'>>(),
                  "2");
         dummy.emplace_back(0);
         listeners.erase("special 2");
         listeners.emplace("special 2",
-                          [&](std::vector<std::any>&     tokens,
-                              Compiler::lexer_interface& lexer,
-                              const std::string&         target) {
+                          [&](std::vector<std::any>& tokens,
+                              pis::lexer_interface&  lexer,
+                              const std::string&     target) {
                               CHECK_EQ(target, "special 2");
                               CHECK_EQ(tokens.size(), 1);
                               CHECK_EQ(&lexer, &test_lexer);
                               tokens.emplace_back("test"s);
                               return "3"s;
                           });
-        CHECK_EQ(test_lexer.template readNext<Compiler::t_string<'\'',
-                                                                 '\"',
-                                                                 's',
-                                                                 'p',
-                                                                 'e',
-                                                                 'c',
-                                                                 'i',
-                                                                 'a',
-                                                                 'l',
-                                                                 ' ',
-                                                                 '2'>>(),
+        CHECK_EQ(test_lexer.template readNext<pis::t_string<'\'',
+                                                            '\"',
+                                                            's',
+                                                            'p',
+                                                            'e',
+                                                            'c',
+                                                            'i',
+                                                            'a',
+                                                            'l',
+                                                            ' ',
+                                                            '2'>>(),
                  "3");
         CHECK_EQ(dummy.size(), 2);
         CHECK_EQ(std::any_cast<int>(dummy[0]), 0);
@@ -652,127 +637,127 @@ Finite:
     {
         // ab[cd1-9\]]*(def)*
         std::string test_input = "ab1 abccdef abdef ab9def ab123c]defdef abde";
-        std::stringstream    ss_input{test_input};
-        Compiler::test_regex test_lexer{
-            ss_input, Compiler::parser_dummy, dummy_listeners};
+        std::stringstream ss_input{test_input};
+        pis::test_regex   test_lexer{
+            ss_input, pis::parser_dummy, dummy_listeners};
         constexpr auto regex_result =
 #include "test_lexer_regex.str"
             ;
         auto regex_dump = rtrim(test_lexer.dump());
         CHECK_EQ(regex_dump, regex_result);
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        'r',
-                                                        'e',
-                                                        'g',
-                                                        'e',
-                                                        'x',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   'r',
+                                                   'e',
+                                                   'g',
+                                                   'e',
+                                                   'x',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "ab1");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        'r',
-                                                        'e',
-                                                        'g',
-                                                        'e',
-                                                        'x',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   'r',
+                                                   'e',
+                                                   'g',
+                                                   'e',
+                                                   'x',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "abccdef");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        'r',
-                                                        'e',
-                                                        'g',
-                                                        'e',
-                                                        'x',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   'r',
+                                                   'e',
+                                                   'g',
+                                                   'e',
+                                                   'x',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "abdef");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        'r',
-                                                        'e',
-                                                        'g',
-                                                        'e',
-                                                        'x',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   'r',
+                                                   'e',
+                                                   'g',
+                                                   'e',
+                                                   'x',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "ab9def");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        'r',
-                                                        'e',
-                                                        'g',
-                                                        'e',
-                                                        'x',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   'r',
+                                                   'e',
+                                                   'g',
+                                                   'e',
+                                                   'x',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "ab123c]defdef");
-        CHECK_EQ(test_lexer.readNext<Compiler::t_string<'\'',
-                                                        '\"',
-                                                        'l',
-                                                        'e',
-                                                        'x',
-                                                        'e',
-                                                        'r',
-                                                        ' ',
-                                                        'r',
-                                                        'e',
-                                                        'g',
-                                                        'e',
-                                                        'x',
-                                                        ' ',
-                                                        't',
-                                                        'e',
-                                                        's',
-                                                        't'>>(),
+        CHECK_EQ(test_lexer.readNext<pis::t_string<'\'',
+                                                   '\"',
+                                                   'l',
+                                                   'e',
+                                                   'x',
+                                                   'e',
+                                                   'r',
+                                                   ' ',
+                                                   'r',
+                                                   'e',
+                                                   'g',
+                                                   'e',
+                                                   'x',
+                                                   ' ',
+                                                   't',
+                                                   'e',
+                                                   's',
+                                                   't'>>(),
                  "abd");
     }
 }

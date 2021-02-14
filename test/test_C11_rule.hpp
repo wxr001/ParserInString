@@ -19,16 +19,16 @@
 #ifndef PARSER_IN_STRING_TEST_C11_RULE
 #define PARSER_IN_STRING_TEST_C11_RULE
 
-#include "Common/Tstring.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Matcher/LL.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Matcher/LL.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include "TAVL.hpp"
 #include <doctest.h>
 #include <type_traits>
 #include "test_C11.hpp"
-namespace Compiler
+namespace pis
 {
     using c11 = code_to_rules_t<identifier_rule,
                                 constant_rule,
@@ -113,6 +113,6 @@ namespace Compiler
                                 external_declaration_rule,
                                 function_definition_rule,
                                 declaration_list_rule>;
-} // namespace Compiler
+} // namespace pis
 
 #endif

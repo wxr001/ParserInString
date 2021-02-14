@@ -20,25 +20,25 @@
 #ifndef PARSER_IN_STRING_TESTSQL
 #define PARSER_IN_STRING_TESTSQL
 
-#include "Common/Tstring.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Matcher/LL.hpp"
-#include "Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
-#include "test_common.hpp"
 #include "doctest.h"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Matcher/LL.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "test_common.hpp"
 #include "test_sql_rules.hpp"
 
-namespace Compiler
+namespace pis
 {
-    using sql_ll    = ll_parsing<sql_rules, _TSTR("sql"), 1>;
-} // namespace Compiler
+    using sql_ll = ll_parsing<sql_rules, _TSTR("sql"), 1>;
+} // namespace pis
 TEST_CASE("ll(1)")
 {
-    typename Compiler::sql_ll::parsing_table::state_map          _s;
-    typename Compiler::sql_ll::parsing_table::parsing_table      _p;
-    std::unordered_map<std::string, Compiler::parser_listener_t> _m;
-    Compiler::sql_ll::parsing_table table{_s, _p, _m};
-    std::cerr<<table.dump()<<std::endl;
+    typename pis::sql_ll::parsing_table::state_map          _s;
+    typename pis::sql_ll::parsing_table::parsing_table      _p;
+    std::unordered_map<std::string, pis::parser_listener_t> _m;
+    pis::sql_ll::parsing_table                              table{_s, _p, _m};
+    std::cerr << table.dump() << std::endl;
 }
 #endif

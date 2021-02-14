@@ -1,19 +1,19 @@
-#include "Common/Identity.hpp"
-#include "Common/TAVLHelper.hpp"
-#include "Common/Tfuncs.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Common/Utils.hpp"
-#include "Matcher/LL.hpp"
-#include "Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/TAVLHelper.hpp"
+#include "pis/Common/Tfuncs.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Common/Utils.hpp"
+#include "pis/Matcher/LL.hpp"
+#include "pis/Rules/CodeToRules.hpp"
 #include "test_common.hpp"
 #include <any>
 #include <doctest.h>
 #include <sstream>
 #include <string>
 #include <type_traits>
-using namespace Compiler;
+using namespace pis;
 static constexpr const char calculator_no_left_recursion[] = R"(
 Expr = Multi, Expr1;
 Expr1 = '+', Multi, Expr1 |

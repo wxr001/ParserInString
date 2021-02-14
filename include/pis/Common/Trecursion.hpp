@@ -1,6 +1,6 @@
 // ParserInString -*- C++ -*-
 
-// Copyright (C) 2020  Scott Brown
+// Copyright (C) 2019 Scott Brown
 
 // This file is part of the UCL library.
 // This library is free software: you can redistribute it and/or modify
@@ -16,30 +16,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef PARSER_IN_STRING_TEST_C11LL
-#define PARSER_IN_STRING_TEST_C11LL
+#ifndef PARSER_IN_STRING_COMMON_TRECURSION
+#define PARSER_IN_STRING_COMMON_TRECURSION
 
-#include "pis/Common/Tstring.hpp"
-#include "pis/Lexer/Lexer.hpp"
-#include "pis/Matcher/LL.hpp"
-#include "pis/Rules/CodeToRules.hpp"
-#include "pis/Rules/EBNF.hpp"
-#include "TAVL.hpp"
-#include <doctest.h>
-#include <type_traits>
-#ifdef C11
-#    include "test_C11_rule.hpp"
-#endif
 namespace pis
-{
-#ifndef C11
-    using c11 = void;
-#endif
-    using c11_ll = ll_parsing<c11, _TSTR("translation unit"), 1>;
-} // namespace pis
-TEST_CASE("ll(1)")
-{
-    Compiler::c11_ll parser;
-    parser.dump();
-}
+{}
 #endif

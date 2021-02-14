@@ -1,2 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "test_EBNF.hpp"
+#include "test_first_set.hpp"
+#include "test_follow_set.hpp"
+#include "test_generated_rule_merger.hpp"
 #include "test_lexer.hpp"
+#include "test_ll.hpp"
+#include "test_lr0.hpp"
+#include "test_rule_to_map.hpp"

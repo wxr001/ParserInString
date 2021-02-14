@@ -2,7 +2,7 @@
 
 // Copyright (C) 2020  Scott Brown
 
-// This file is part of the UCL library.
+// This file is part of the ParserInString library.
 // This library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -16,30 +16,28 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef PARSER_IN_STRING_TEST_C11LL
-#define PARSER_IN_STRING_TEST_C11LL
+#ifndef PARSER_IN_STRING_MATCHER_PARSERBASE
+#define PARSER_IN_STRING_MATCHER_PARSERBASE
 
-#include "pis/Common/Tstring.hpp"
-#include "pis/Lexer/Lexer.hpp"
-#include "pis/Matcher/LL.hpp"
-#include "pis/Rules/CodeToRules.hpp"
-#include "pis/Rules/EBNF.hpp"
-#include "TAVL.hpp"
-#include <doctest.h>
-#include <type_traits>
-#ifdef C11
-#    include "test_C11_rule.hpp"
-#endif
+#include "pis/Lexer/lexer_interface.hpp"
+#include <any>
+#include <functional>
+
 namespace pis
 {
-#ifndef C11
-    using c11 = void;
-#endif
-    using c11_ll = ll_parsing<c11, _TSTR("translation unit"), 1>;
+    using parser_listener_t = std::function<
+        std::any(std::vector<std::any>, lexer_interface&, const std::string&)>;
+    std::any parser_listener_dummy(std::vector<std::any> tokens_current,
+                                   lexer_interface& /* lexer */,
+                                   const std::string& /* target */)
+    {
+        return std::make_any<std::vector<std::any>>(tokens_current);
+    }
+    namespace impl
+    {
+        using parser_listener_map_t =
+            std::unordered_map<std::string, parser_listener_t>;
+    }
 } // namespace pis
-TEST_CASE("ll(1)")
-{
-    Compiler::c11_ll parser;
-    parser.dump();
-}
+
 #endif

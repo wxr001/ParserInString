@@ -19,15 +19,15 @@
 #ifndef PARSER_IN_STRING_TEST_PL0
 #define PARSER_IN_STRING_TEST_PL0
 
-#include "Common/Tstring.hpp"
-#include "Matcher/LL.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
 #include "TAVL.hpp"
 #include "doctest.h"
-#include <type_traits>
+#include "pis/Common/Tstring.hpp"
+#include "pis/Matcher/LL.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include <iostream>
-namespace Compiler
+#include <type_traits>
+namespace pis
 {
     DECL_RULE(program, "program = block, ';';");
     DECL_RULE(block, R"(
@@ -100,14 +100,14 @@ namespace Compiler
                                       ident_rule,
                                       number_rule>;
     using pl0_ll    = ll_parsing<pl0_rules, _TSTR("program"), 1>;
-} // namespace Compiler
+} // namespace pis
 TEST_CASE("ll(1)")
 {
-    typename Compiler::pl0_ll::parsing_table::state_map          _s;
-    typename Compiler::pl0_ll::parsing_table::parsing_table      _p;
-    std::unordered_map<std::string, Compiler::parser_listener_t> _m;
-    Compiler::pl0_ll::parsing_table table{_s, _p, _m};
-    std::cerr<<table.dump()<<std::endl;
+    typename pis::pl0_ll::parsing_table::state_map          _s;
+    typename pis::pl0_ll::parsing_table::parsing_table      _p;
+    std::unordered_map<std::string, pis::parser_listener_t> _m;
+    pis::pl0_ll::parsing_table                              table{_s, _p, _m};
+    std::cerr << table.dump() << std::endl;
 }
 
 #endif

@@ -18,11 +18,11 @@
 
 #ifndef PARSER_IN_STRING_MATCHER_TESTCODETORULES
 #define PARSER_IN_STRING_MATCHER_TESTCODETORULES
-#include "Common/Identity.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Common/Utils.hpp"
-#include "Rules/CodeToRules.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Common/Utils.hpp"
+#include "pis/Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
 #include <type_traits>
 static constexpr const char empty_rules[]    = " ";
@@ -38,37 +38,37 @@ using unmerged_rules_result                  = tavl::tavl_node<
         tavl::empty_node,
         0,
         std::integer_sequence<char, '@', '0'>,
-        Compiler::type_list<Compiler::type_list<
-            Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+        pis::type_list<pis::type_list<
+            pis::type_pair<pis::Impl::terminal_string_flag,
                                 std::integer_sequence<char, 'a'>>,
-            Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+            pis::type_pair<pis::Impl::terminal_string_flag,
                                 std::integer_sequence<char, '+'>>>>>,
     tavl::tavl_node<
         tavl::empty_node,
         tavl::empty_node,
         0,
         std::integer_sequence<char, 'R', '2'>,
-        Compiler::type_list<
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+        pis::type_list<
+            pis::type_list<
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, '('>>,
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, 'R', '1'>>,
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, ')'>>>,
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+            pis::type_list<
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, 'i'>>>>>,
     1,
     std::integer_sequence<char, 'R', '1'>,
-    Compiler::type_list<
-        Compiler::type_list<
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+    pis::type_list<
+        pis::type_list<
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, '@', '0'>>,
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'R', '2'>>>,
-        Compiler::type_list<
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+        pis::type_list<
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'R', '2'>>>>>;
 static constexpr const char lexer_rules[] = R"(
 R1 = [R2], R3 | [R2];
@@ -81,20 +81,20 @@ using lexer_rules_result                  = tavl::tavl_node<
             tavl::empty_node,
             0,
             std::integer_sequence<char, '@', '0'>,
-            Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                                    Compiler::Impl::meta_identifier_flag,
+            pis::type_list<pis::type_list<pis::type_pair<
+                                    pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, 'R', '2'>>>,
-                                Compiler::type_list<Compiler::type_pair<
-                                    Compiler::Impl::empty_sequence_flag,
+                                pis::type_list<pis::type_pair<
+                                    pis::Impl::empty_sequence_flag,
                                     std::integer_sequence<char>>>>>,
         tavl::empty_node,
         1,
         std::integer_sequence<char, '@', '1'>,
-        Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                                Compiler::Impl::meta_identifier_flag,
+        pis::type_list<pis::type_list<pis::type_pair<
+                                pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'R', '2'>>>,
-                            Compiler::type_list<Compiler::type_pair<
-                                Compiler::Impl::empty_sequence_flag,
+                            pis::type_list<pis::type_pair<
+                                pis::Impl::empty_sequence_flag,
                                 std::integer_sequence<char>>>>>,
     tavl::tavl_node<
         tavl::tavl_node<
@@ -102,23 +102,23 @@ using lexer_rules_result                  = tavl::tavl_node<
             tavl::empty_node,
             0,
             std::integer_sequence<char, 'R', '1'>,
-            Compiler::type_list<
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_list<
+                pis::type_list<
+                    pis::type_pair<pis::Impl::meta_identifier_flag,
                                         std::integer_sequence<char, '@', '0'>>,
-                    Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+                    pis::type_pair<pis::Impl::meta_identifier_flag,
                                         std::integer_sequence<char, 'R', '3'>>>,
-                Compiler::type_list<Compiler::type_pair<
-                    Compiler::Impl::meta_identifier_flag,
+                pis::type_list<pis::type_pair<
+                    pis::Impl::meta_identifier_flag,
                     std::integer_sequence<char, '@', '1'>>>>>,
         tavl::tavl_node<
             tavl::empty_node,
             tavl::empty_node,
             0,
             std::integer_sequence<char, 'R', '3'>,
-            Compiler::type_list<
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::special_sequence_flag,
+            pis::type_list<
+                pis::type_list<
+                    pis::type_pair<pis::Impl::special_sequence_flag,
                                         std::integer_sequence<char,
                                                               'l',
                                                               'e',
@@ -129,36 +129,36 @@ using lexer_rules_result                  = tavl::tavl_node<
                                                               'a',
                                                               'b',
                                                               'c'>>,
-                    Compiler::type_pair<
-                        Compiler::Impl::repeated_sequence_flag,
-                        Compiler::type_list<
-                            Compiler::type_list<Compiler::type_pair<
-                                Compiler::Impl::meta_identifier_flag,
+                    pis::type_pair<
+                        pis::Impl::repeated_sequence_flag,
+                        pis::type_list<
+                            pis::type_list<pis::type_pair<
+                                pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'R', '3'>>>>>>,
-                Compiler::type_list<
-                    Compiler::type_pair<Compiler::Impl::empty_sequence_flag,
+                pis::type_list<
+                    pis::type_pair<pis::Impl::empty_sequence_flag,
                                         std::integer_sequence<char>>>>>,
         1,
         std::integer_sequence<char, 'R', '2'>,
-        Compiler::type_list<
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+        pis::type_list<
+            pis::type_list<
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, '@', '2'>>,
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, 'R', '3'>>>,
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_list<
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, 'R', '3'>>>>>,
     2,
     std::integer_sequence<char, '@', '2'>,
-    Compiler::type_list<
-        Compiler::type_list<
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+    pis::type_list<
+        pis::type_list<
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'R', '2'>>,
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, '@', '2'>>>,
-        Compiler::type_list<
-            Compiler::type_pair<Compiler::Impl::empty_sequence_flag,
+        pis::type_list<
+            pis::type_pair<pis::Impl::empty_sequence_flag,
                                 std::integer_sequence<char>>>>>;
 static constexpr const char calculator[] = R"(
 Primary = Primary, "+", Sub | Primary, "-", Sub | Sub;
@@ -171,11 +171,11 @@ using calculator_result                  = tavl::tavl_node<
         tavl::empty_node,
         0,
         std::integer_sequence<char, 'F', 'a', 'c', 't', 'o', 'r'>,
-        Compiler::type_list<
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+        pis::type_list<
+            pis::type_list<
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, '('>>,
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char,
                                                           'P',
                                                           'r',
@@ -184,57 +184,57 @@ using calculator_result                  = tavl::tavl_node<
                                                           'a',
                                                           'r',
                                                           'y'>>,
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, ')'>>>,
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+            pis::type_list<
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, 'i'>>>>>,
     tavl::tavl_node<
         tavl::empty_node,
         tavl::empty_node,
         0,
         std::integer_sequence<char, 'S', 'u', 'b'>,
-        Compiler::type_list<
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+        pis::type_list<
+            pis::type_list<
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, 'S', 'u', 'b'>>,
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, '*'>>,
-                Compiler::type_pair<
-                    Compiler::Impl::meta_identifier_flag,
+                pis::type_pair<
+                    pis::Impl::meta_identifier_flag,
                     std::integer_sequence<char, 'F', 'a', 'c', 't', 'o', 'r'>>>,
-            Compiler::type_list<
-                Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_list<
+                pis::type_pair<pis::Impl::meta_identifier_flag,
                                     std::integer_sequence<char, 'S', 'u', 'b'>>,
-                Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+                pis::type_pair<pis::Impl::terminal_string_flag,
                                     std::integer_sequence<char, '/'>>,
-                Compiler::type_pair<
-                    Compiler::Impl::meta_identifier_flag,
+                pis::type_pair<
+                    pis::Impl::meta_identifier_flag,
                     std::integer_sequence<char, 'F', 'a', 'c', 't', 'o', 'r'>>>,
-            Compiler::type_list<Compiler::type_pair<
-                Compiler::Impl::meta_identifier_flag,
+            pis::type_list<pis::type_pair<
+                pis::Impl::meta_identifier_flag,
                 std::integer_sequence<char, 'F', 'a', 'c', 't', 'o', 'r'>>>>>,
     1,
     std::integer_sequence<char, 'P', 'r', 'i', 'm', 'a', 'r', 'y'>,
-    Compiler::type_list<
-        Compiler::type_list<
-            Compiler::type_pair<
-                Compiler::Impl::meta_identifier_flag,
+    pis::type_list<
+        pis::type_list<
+            pis::type_pair<
+                pis::Impl::meta_identifier_flag,
                 std::integer_sequence<char, 'P', 'r', 'i', 'm', 'a', 'r', 'y'>>,
-            Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+            pis::type_pair<pis::Impl::terminal_string_flag,
                                 std::integer_sequence<char, '+'>>,
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'S', 'u', 'b'>>>,
-        Compiler::type_list<
-            Compiler::type_pair<
-                Compiler::Impl::meta_identifier_flag,
+        pis::type_list<
+            pis::type_pair<
+                pis::Impl::meta_identifier_flag,
                 std::integer_sequence<char, 'P', 'r', 'i', 'm', 'a', 'r', 'y'>>,
-            Compiler::type_pair<Compiler::Impl::terminal_string_flag,
+            pis::type_pair<pis::Impl::terminal_string_flag,
                                 std::integer_sequence<char, '-'>>,
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'S', 'u', 'b'>>>,
-        Compiler::type_list<
-            Compiler::type_pair<Compiler::Impl::meta_identifier_flag,
+        pis::type_list<
+            pis::type_pair<pis::Impl::meta_identifier_flag,
                                 std::integer_sequence<char, 'S', 'u', 'b'>>>>>;
 DECL_RULE(redundant, "A = 'a'; A = 'b';");
 using redundant_decl_merged = tavl::tavl_node<
@@ -242,14 +242,14 @@ using redundant_decl_merged = tavl::tavl_node<
     tavl::empty_node,
     0,
     std::integer_sequence<char, 'A'>,
-    Compiler::type_list<Compiler::type_list<Compiler::type_pair<
-                            Compiler::Impl::terminal_string_flag,
+    pis::type_list<pis::type_list<pis::type_pair<
+                            pis::Impl::terminal_string_flag,
                             std::integer_sequence<char, 'b'>>>,
-                        Compiler::type_list<Compiler::type_pair<
-                            Compiler::Impl::terminal_string_flag,
+                        pis::type_list<pis::type_pair<
+                            pis::Impl::terminal_string_flag,
                             std::integer_sequence<char, 'a'>>>>>;
 
-namespace Compiler
+namespace pis
 {
     using test_empty_rules = code_to_rules_t<empty_rules>;
     static_assert(std::is_same_v<test_empty_rules, empty_rules_result>,
@@ -269,6 +269,6 @@ namespace Compiler
     static_assert(std::is_same_v<test_redundant, redundant_decl_merged>,
                   "merge rules with same identifier");
 
-} // namespace Compiler
+} // namespace pis
 
 #endif

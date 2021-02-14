@@ -16,17 +16,17 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef UNIVERSAL_COMPILER_LIBRARY_GRAMMAR_MATCHER_TESTEBNF
-#define UNIVERSAL_COMPILER_LIBRARY_GRAMMAR_MATCHER_TESTEBNF
+#ifndef PARSER_IN_STRING_MATCHER_MATCHER_TESTEBNF
+#define PARSER_IN_STRING_MATCHER_MATCHER_TESTEBNF
 
-#include "Common/Identity.hpp"
-#include "Common/Tlist.hpp"
-#include "Common/Tstring.hpp"
-#include "Rules/EBNF.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Identity.hpp"
+#include "pis/Common/Tlist.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include <type_traits>
 
-namespace Compiler
+namespace pis
 {
     namespace InHeaderDebug
     {
@@ -506,5 +506,5 @@ namespace Compiler
         } // namespace SecondQuoteStringTest
 #undef EOS_TAG
     } // namespace InHeaderDebug
-} // namespace Compiler
+} // namespace pis
 #endif

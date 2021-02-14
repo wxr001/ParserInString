@@ -20,13 +20,13 @@
 #ifndef PARSER_IN_STRING_TESTSQLRULES
 #define PARSER_IN_STRING_TESTSQLRULES
 
-#include "Common/Tstring.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Rules/CodeToRules.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Rules/CodeToRules.hpp"
 #include "test_common.hpp"
 
-namespace Compiler
+namespace pis
 {
     // common.hpp
     DECL_RULE(direction_type, R"(
@@ -351,5 +351,5 @@ namespace Compiler
                                       table_or_subquery_select_rule,
                                       table_or_subquery_sublist_rule,
                                       table_or_subquery_table_rule>;
-} // namespace Compiler
+} // namespace pis
 #endif

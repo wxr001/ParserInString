@@ -19,15 +19,15 @@
 #ifndef PARSER_IN_STRING_TEST_TESTLUA
 #define PARSER_IN_STRING_TEST_TESTLUA
 
-#include "Common/Tstring.hpp"
-#include "Lexer/Lexer.hpp"
-#include "Matcher/LL.hpp"
-#include "Rules/CodeToRules.hpp"
-#include "Rules/EBNF.hpp"
 #include "TAVL.hpp"
+#include "pis/Common/Tstring.hpp"
+#include "pis/Lexer/Lexer.hpp"
+#include "pis/Matcher/LL.hpp"
+#include "pis/Rules/CodeToRules.hpp"
+#include "pis/Rules/EBNF.hpp"
 #include <doctest.h>
 #include <type_traits>
-namespace Compiler
+namespace pis
 {
     DECL_RULE(chunk, "chunk = block;");
     DECL_RULE(block, "block = {stat}, [retstat];");
@@ -115,6 +115,6 @@ namespace Compiler
                                 identifier_rule>;
     // not LL(k)
     // using lua_ll = ll_parsing<lua, _TSTR("chunk"), 2>;
-} // namespace Compiler
+} // namespace pis
 TEST_SUITE("lua") {}
 #endif
