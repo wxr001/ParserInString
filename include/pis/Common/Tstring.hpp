@@ -320,14 +320,14 @@ namespace pis
 
 // clang-format off
 #define TSTR16(n, x)                                        \
-    Impl::getchar<0x##n##0>(x), Impl::getchar<0x##n##1>(x), \
-    Impl::getchar<0x##n##2>(x), Impl::getchar<0x##n##3>(x), \
-    Impl::getchar<0x##n##4>(x), Impl::getchar<0x##n##5>(x), \
-    Impl::getchar<0x##n##6>(x), Impl::getchar<0x##n##7>(x), \
-    Impl::getchar<0x##n##8>(x), Impl::getchar<0x##n##9>(x), \
-    Impl::getchar<0x##n##A>(x), Impl::getchar<0x##n##B>(x), \
-    Impl::getchar<0x##n##C>(x), Impl::getchar<0x##n##D>(x), \
-    Impl::getchar<0x##n##E>(x), Impl::getchar<0x##n##F>(x)
+    pis::Impl::getchar<0x##n##0>(x), pis::Impl::getchar<0x##n##1>(x), \
+    pis::Impl::getchar<0x##n##2>(x), pis::Impl::getchar<0x##n##3>(x), \
+    pis::Impl::getchar<0x##n##4>(x), pis::Impl::getchar<0x##n##5>(x), \
+    pis::Impl::getchar<0x##n##6>(x), pis::Impl::getchar<0x##n##7>(x), \
+    pis::Impl::getchar<0x##n##8>(x), pis::Impl::getchar<0x##n##9>(x), \
+    pis::Impl::getchar<0x##n##A>(x), pis::Impl::getchar<0x##n##B>(x), \
+    pis::Impl::getchar<0x##n##C>(x), pis::Impl::getchar<0x##n##D>(x), \
+    pis::Impl::getchar<0x##n##E>(x), pis::Impl::getchar<0x##n##F>(x)
 #define TSTR128(n, x)                 \
     TSTR16(n##0, x), TSTR16(n##1, x), \
     TSTR16(n##2, x), TSTR16(n##3, x), \
@@ -350,7 +350,7 @@ namespace pis
     TSTR16(n##3C, x), TSTR16(n##3D, x), \
     TSTR16(n##3E, x), TSTR16(n##3F, x)
 #define _TSTR(x) \
-    Impl::remove_zero_t<TSTR128(, x)>
+    pis::Impl::remove_zero_t<TSTR128(, x)>
     // clang-format on
 } // namespace pis
 namespace InjectedString
